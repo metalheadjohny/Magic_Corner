@@ -2,6 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include "Animation.h"
 #include "InputManager.h"
+#include "messageStructs.h"
 
 static float gravity = 9.81f;
 
@@ -38,7 +39,7 @@ public:
 class InputManager;
 enum Event;
 
-class Player : GameObject {
+class Player : public GameObject {
 
 public:
 
@@ -72,6 +73,12 @@ public:
 
 	void removeSSA(const std::string& name) {
 		animap.erase(name);
+	}
+
+	void stageUpdates(Pos_2B& updateStruct) {
+		updateStruct.x = posMin.x;
+		updateStruct.y = posMin.y;
+		updateStruct.type = MsgType::T_2B;
 	}
 
 	void OnNotify(const InputManager& iMan, const Event& cmd);

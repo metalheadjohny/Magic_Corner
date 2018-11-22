@@ -83,8 +83,6 @@ void Player::Update(float dTime){
 	old = current;
 	ssa.play(dTime);
 
-
-
 	//animation.sprite.setPosition(posMin);
 	//animation.play(cat, dTime);
 }

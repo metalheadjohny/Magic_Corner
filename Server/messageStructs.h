@@ -41,18 +41,19 @@ class Pos_2B : Msg {
 public:
 
 	float x, y;
-	int mode;
 	MsgType type = MsgType::T_2B;
+	int typeInt = (int)MsgType::T_2B;
 
 	void Load(sf::Packet& p) {
-		p << x << y << mode;
+		p << x << y << type;
 	}
 
 	void Decipher(sf::Packet& p) {
-		p >> x >> y >> mode;
+		p >> x >> y >> typeInt;
 	}
 
 	void Print() {
 		std::cout << "2B coordinates (x, y) = (" << x << ", " << y << ")" << std::endl;
 	}
 };
+
