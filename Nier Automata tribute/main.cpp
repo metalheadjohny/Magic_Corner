@@ -1,32 +1,45 @@
 #include "Loader.h"
 #include "GameObject.h"
-#include "TCPInterface.h"
+#include "Relay.h"
+#include "TileMapper.h"
 #include <string>
+#include "FSM.h"
 
-const std::string BASEPATH = "C:\\\\Users\\metal\\\Desktop\\Network\\Assets\\";
+
+
+const std::string BASEPATH = "../Assets/";
 static const float UPDATE_INTERVAL = 0.33f;
 float ww = 1920.f, wh = 1080.f, elapsed = 0.f, late = 0.f, frameTime = 0.0f;
 Loader loader;
 InputManager iMan;
 TCPInterface tcpi;
 
+sf::RenderWindow window(sf::VideoMode(ww, wh), "Nier but bad", sf::Style::Close | sf::Style::Titlebar | sf::Style::Fullscreen);
+sf::View view(sf::Vector2f(0, 0), sf::Vector2f(ww, wh));
+
 InanimateObject platform;
-Player p2b(100, 100);
+Player p2b(100, 300);
 
 std::vector<InanimateObject*> terrain;
+
+TileMapper tileMapper;
 
 void resolveCollisions();
 
 int main() {
 
-	sf::RenderWindow window(sf::VideoMode(ww, wh), "Nier but bad", sf::Style::Close | sf::Style::Titlebar | sf::Style::Fullscreen);
 	window.setKeyRepeatEnabled(false);
+	window.setView(view);
+
+	tileMapper.loadFromFile(BASEPATH + "LevelTileMap.txt", "refinery.png");
 
 	//Loader::LoadLevel();
 	p2b.loadSSA(BASEPATH + "2B exivus sprites\\limit_break.png", sf::Vector2u(3, 17), 5.f, "lb"); 
 	p2b.loadSSA(BASEPATH + "2B exivus sprites\\move_left.png", sf::Vector2u(1, 1), 10.f, "walk_left");
 	p2b.loadSSA(BASEPATH + "2B exivus sprites\\move_right.png", sf::Vector2u(1, 1), 10.f, "walk_right");
+	p2b.loadSSA(BASEPATH + "2B exivus sprites\\magic_attack.png", sf::Vector2u(3, 2), 10.f, "ranged_attack");
 	p2b.loadSSA(BASEPATH + "2B exivus sprites\\sorted\\m2b_pat_bot.png", sf::Vector2u(20, 1), 2.f, "idle");
+	p2b.posMin = sf::Vector2f(97.f, 97.f);
 
 	
 	platform.rs = sf::RectangleShape(sf::Vector2f(ww, 50.0f));
@@ -44,7 +57,6 @@ int main() {
 	//tcpi.getRefToClientSocket().setBlocking(false);
 	tcpi.connect();
 
-	
 
 	sf::Packet inputPacket;
 	sf::Packet updatePacket;
@@ -69,6 +81,9 @@ int main() {
 		//updating locally
 		p2b.Update(frameTime);
 
+		view.setCenter(p2b.posMin);
+		window.setView(view);
+
 
 		//sending updates
 		if (late >= UPDATE_INTERVAL) {
@@ -88,8 +103,13 @@ int main() {
 		resolveCollisions();
 
 		window.clear();
-		window.draw(p2b.sprite);
-		window.draw(platform.rs);
+		window.draw(tileMapper.background);
+		for (auto a : tileMapper.level) {
+			window.draw(a.rs);
+		}
+		
+		p2b.draw(&window);
+		//window.draw(platform.rs);
 		window.display();
 	}
 
@@ -99,10 +119,10 @@ int main() {
 
 void resolveCollisions() {
 
-	for (auto a : terrain) {
-		if (p2b.sprite.getGlobalBounds().intersects(a->rs.getGlobalBounds())) {
-			p2b.posMin.y -= gravity * 10.0f * frameTime;
-			//p2b.posMin.y = a->rs.getGlobalBounds().top - p2b.sprite.getLocalBounds().height * 0.75f;
+	for (auto a : tileMapper.level) {
+		if (a.collides && p2b.sprite.getGlobalBounds().intersects(a.rs.getGlobalBounds())) {
+			//handle collision for top down, im switchin' baby
+			p2b.posMin -= p2b.velocity * frameTime * p2b.speed;
 		}
 	}
 	

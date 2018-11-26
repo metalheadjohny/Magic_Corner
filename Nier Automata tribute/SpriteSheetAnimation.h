@@ -51,8 +51,8 @@ public:
 
 		float wat  = curTime / swapInterval;
 		spriteIndex = (unsigned short int)floor(wat);
-		unsigned int row = (floor) (spriteIndex % gridSize.x);
-		unsigned int column = (floor) (spriteIndex / gridSize.x);
+		unsigned int row = floor(spriteIndex % gridSize.x);
+		unsigned int column = floor(spriteIndex / gridSize.x);
 
 		sprite->setTextureRect(sf::IntRect(cellSize.x * row, cellSize.y * column, cellSize.x, cellSize.y));
 	}

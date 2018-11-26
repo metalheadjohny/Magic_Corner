@@ -3,13 +3,19 @@
 #include "Animation.h"
 #include "InputManager.h"
 #include "messageStructs.h"
+#include "Projectile.h"
 
-static float gravity = 9.81f;
+class InputManager;
+enum Event;
+
+
 
 class GameObject{
 
 public:
 	sf::Vector2f posMin, size;
+	sf::RectangleShape rs;
+
 	float rotation;
 	
 	GameObject();
@@ -18,49 +24,41 @@ public:
 
 
 
-class TriggerObject : GameObject {
-
-public:
-	virtual void Publish(){}
-};
-
-
-
 class InanimateObject : public GameObject {
 
 public:
 	sf::RectangleShape rs;
+	bool collides = true;
 };
 
 
 
-
-
-class InputManager;
-enum Event;
-
 class Player : public GameObject {
 
 public:
-
-	const float jumpDuration = 1.0f;
-	float elapsed = 0.0f;
-	bool isJumping = false;
+	float elapsed = 0.0f; 
+	
+	int rot;	//might not be necessary @TODO review
 
 	float maxHP, maxSpeed, hp, speed;
 	float mDCD, mBUCD, mSDCD, cDCD, cBUCD, cSDCD;	//max and current dodge, bot ult and self destruct cooldowns
-	sf::Vector2f velocity;
+	sf::Vector2f velocity, mouseDir, mousePos;
 
 	Event current = Event::CHILL, old = Event::CHILL;
 
 	std::map<std::string, SpriteSheetAnimation> animap;
 	sf::Sprite sprite;
 	SpriteSheetAnimation ssa;
+	ProjectileManager desAndTroy;
 
 	Player(float maxHP, float maxSpeed)
-		: maxHP(maxHP), hp(maxHP), maxSpeed(maxSpeed), speed(maxSpeed), mDCD(3.f), mBUCD(10.f), mSDCD(60.f), ssa(SpriteSheetAnimation(&sprite))
+		: maxHP(maxHP), hp(maxHP), maxSpeed(maxSpeed), 
+		speed(maxSpeed), mDCD(3.f), mBUCD(10.f), mSDCD(60.f),
+		ssa(SpriteSheetAnimation(&sprite))
+
 	{
 		cDCD = cBUCD = cSDCD = 0.f;
+		mousePos = sf::Vector2f(0, 0);
 	}
 
 
@@ -75,6 +73,13 @@ public:
 		animap.erase(name);
 	}
 
+	void draw(sf::RenderWindow* window) {
+		window->draw(sprite);
+		for (auto a : desAndTroy.bullets) {
+			window->draw(a.rs);
+		}
+	}
+
 	void stageUpdates(Pos_2B& updateStruct) {
 		updateStruct.x = posMin.x;
 		updateStruct.y = posMin.y;
@@ -83,7 +88,7 @@ public:
 
 	void OnNotify(const InputManager& iMan, const Event& cmd);
 	void Update(float dTime);
-	void Jump(float dTime);
+	//void Jump(float dTime);
 };
 
 
