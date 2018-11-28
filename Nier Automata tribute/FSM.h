@@ -1,10 +1,12 @@
 #pragma once
 
-enum State {
+enum GameState {
 	MAIN_MENU,
 	HOSTING,
 	JOINING,
-	OBSERVING
+	OBSERVING,
+	QUITTING,
+	NONE
 };
 
 
@@ -16,7 +18,5 @@ public:
 	~FSM();
 
 	virtual void processInput() = 0;
-
-
 };
 

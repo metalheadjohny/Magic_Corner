@@ -39,11 +39,11 @@ void TCPInterface::connect() {
 
 
 void TCPInterface::listen() {
-	
 	while (listener.listen(SERVER_PORT) != sf::Socket::Done)
 		std::cout << "Not listening. Not listening!" << std::endl;
+}
 
-
+void TCPInterface::accept() {
 	if (listener.accept(cooperator) != sf::Socket::Done)
 		std::cout << "Failed to accept a new client..." << std::endl;
 	else

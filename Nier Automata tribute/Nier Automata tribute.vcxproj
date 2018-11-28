@@ -92,6 +92,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)\Deps\rapidjson-master\include\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>sfml-system-d.lib;sfml-graphics-d.lib;sfml-audio-d.lib;sfml-network-d.lib;sfml-window-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -142,9 +143,11 @@
     <ClCompile Include="Animation.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="FSM.cpp" />
+    <ClCompile Include="GUI.cpp" />
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="Loader.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MatchMaker.cpp" />
     <ClCompile Include="Projectile.cpp" />
     <ClCompile Include="Relay.cpp" />
     <ClCompile Include="SpriteSheetAnimation.cpp" />
@@ -157,8 +160,11 @@
     <ClInclude Include="Animation.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="FSM.h" />
+    <ClInclude Include="GUI.h" />
     <ClInclude Include="InputManager.h" />
     <ClInclude Include="Loader.h" />
+    <ClInclude Include="LoadingScreen.h" />
+    <ClInclude Include="MatchMaker.h" />
     <ClInclude Include="messageStructs.h" />
     <ClInclude Include="Projectile.h" />
     <ClInclude Include="Relay.h" />
