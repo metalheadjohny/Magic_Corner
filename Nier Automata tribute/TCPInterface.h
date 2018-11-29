@@ -6,10 +6,10 @@
 
 class TCPInterface {
 
+	sf::TcpListener listener;
 	sf::TcpSocket socket;
 	sf::TcpSocket cooperator;
 	sf::Socket::Status status;
-	sf::TcpListener listener;
 
 	std::vector<sf::TcpSocket> observers;
 
@@ -22,10 +22,12 @@ public:
 	~TCPInterface();
 
 	void init(std::string serverIp, int serverPort);
-	void connect();
 	void listen();
-	void accept();
+	bool accept();
+	void closeListener();
+	void connect(std::string ip, int port);
 	void send(sf::Packet p);
+	void send9s(sf::Packet p);
 	void receive(sf::Packet& p);
 	
 	sf::TcpSocket& getRefToClientSocket() { return socket; }

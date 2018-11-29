@@ -57,7 +57,7 @@ void GUI::init() {
 }
 
 
-void GUI::react(sf::RenderWindow& window, sf::Event& e, GameState& gameState) {
+bool GUI::react(sf::RenderWindow& window, sf::Event& e, GameState& gameState) {
 	
 	sf::Vector2f mousePos = static_cast<sf::Vector2f>(sf::Mouse::getPosition());
 
@@ -74,11 +74,10 @@ void GUI::react(sf::RenderWindow& window, sf::Event& e, GameState& gameState) {
 		{
 			if (b.focused) {
 				b.unfocus();
-				activeTag = GameState::NONE;
+				activeTag = GameState::MAIN_MENU;
 			}
 			
 		}
-
 	}
 
 
@@ -86,7 +85,7 @@ void GUI::react(sf::RenderWindow& window, sf::Event& e, GameState& gameState) {
 		switch (e.type) {
 		
 		case sf::Event::Closed:
-			window.close();
+			return false;
 			break;
 		
 		case sf::Event::MouseButtonPressed:
@@ -95,10 +94,13 @@ void GUI::react(sf::RenderWindow& window, sf::Event& e, GameState& gameState) {
 			break;
 		case sf::Event::KeyPressed:
 			if (e.key.code == sf::Keyboard::Escape)
-				window.close();
+				return false;
 			break;
 		}
 	}
+
+	draw();
+	return true;
 }
 
 
@@ -115,5 +117,5 @@ void GUI::onClick(GameState& gs) {
 	if (activeTag == GameState::NONE)
 		return;
 
-		gs = activeTag;
+	gs = activeTag;
 }

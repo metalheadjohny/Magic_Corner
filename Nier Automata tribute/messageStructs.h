@@ -1,15 +1,7 @@
 #pragma once
-
 #include <SFML/Network.hpp>
 #include <iostream>
 
-struct Pos_9S {
-	float angle, distance;
-};
-
-struct Vel_2B {
-	float x, y;
-};
 
 
 enum MsgType {
@@ -17,42 +9,23 @@ enum MsgType {
 	T_9S
 };
 
-enum CMD_9S {
-	ROTATE,
-	HACK,
-	SHIELD,
-	PHASE
-};
 
 
-class Msg {
-
-protected:
-	virtual void Load(sf::Packet& p) = 0;
-	virtual void Decipher(sf::Packet& p) = 0;
-	virtual void Print() = 0;
-};
-
-
-
-
-class Pos_2B : Msg {
-
-public:
+struct Msg2B {
 
 	float x, y;
-	int mode;
+	sf::Int32 state;
+	std::uint64_t ms;
 	MsgType type = MsgType::T_2B;
 
-	void Load(sf::Packet& p) {
-		p << x << y << mode;
-	}
+};
 
-	void Decipher(sf::Packet& p) {
-		p >> x >> y >> mode;
-	}
 
-	void Print() {
-		std::cout << "2B coordinates (x, y) = (" << x << ", " << y << ")" << std::endl;
-	}
+
+struct Msg9S {
+
+	float angle;
+	float distance;
+	sf::Int32 state;
+	MsgType type = MsgType::T_9S;
 };

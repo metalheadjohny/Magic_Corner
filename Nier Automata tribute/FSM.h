@@ -6,6 +6,8 @@ enum GameState {
 	JOINING,
 	OBSERVING,
 	QUITTING,
+	PLAYER_2B,
+	PLAYER_9S,
 	NONE
 };
 

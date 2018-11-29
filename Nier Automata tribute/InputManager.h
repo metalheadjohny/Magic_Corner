@@ -20,6 +20,15 @@ enum Event {
 	SELF_DESTRUCT
 };
 
+enum Event9s {
+	CHILL,
+	ROTATE,
+	HACK,
+	SHIELD,
+	PHASE,
+	PUSH,
+};
+
 
 class InputManager{
 

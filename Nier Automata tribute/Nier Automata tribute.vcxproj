@@ -141,6 +141,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Animation.cpp" />
+    <ClCompile Include="Game2B.cpp" />
+    <ClCompile Include="Game9S.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="FSM.cpp" />
     <ClCompile Include="GUI.cpp" />
@@ -158,12 +160,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animation.h" />
+    <ClInclude Include="Game2B.h" />
+    <ClInclude Include="Game9S.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="FSM.h" />
     <ClInclude Include="GUI.h" />
     <ClInclude Include="InputManager.h" />
+    <ClInclude Include="JoiningScreen.h" />
     <ClInclude Include="Loader.h" />
-    <ClInclude Include="LoadingScreen.h" />
+    <ClInclude Include="HostingScreen.h" />
     <ClInclude Include="MatchMaker.h" />
     <ClInclude Include="messageStructs.h" />
     <ClInclude Include="Projectile.h" />

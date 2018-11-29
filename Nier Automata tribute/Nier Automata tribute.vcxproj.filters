@@ -60,6 +60,12 @@
     <ClCompile Include="MatchMaker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Game2B.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Game9S.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animation.h">
@@ -107,7 +113,16 @@
     <ClInclude Include="MatchMaker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LoadingScreen.h">
+    <ClInclude Include="JoiningScreen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HostingScreen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Game2B.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Game9S.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

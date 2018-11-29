@@ -9,8 +9,18 @@ class Relay{
 	std::vector<std::pair<float, float>> history;
 
 public:
+
+	TCPInterface tcpi;
+
+	std::vector<Msg2B> updates2b;
+	std::vector<Msg9S> updates9s;
+
+	//vector for observers as well... tbi
+
 	Relay();
 	~Relay();
+
+	void init();
 
 	//hang until someone connects if server, or until connected if client... decide on arhitecture
 	void establish();
@@ -24,5 +34,7 @@ public:
 
 	//try to guess the hell is gonna happen in between updates
 	void divinate();
+
+	void accumulate();
 };
 

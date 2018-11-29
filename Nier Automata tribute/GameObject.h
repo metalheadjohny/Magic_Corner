@@ -4,6 +4,7 @@
 #include "InputManager.h"
 #include "messageStructs.h"
 #include "Projectile.h"
+#include <chrono>
 
 class InputManager;
 enum Event;
@@ -44,12 +45,17 @@ public:
 	float mDCD, mBUCD, mSDCD, cDCD, cBUCD, cSDCD;	//max and current dodge, bot ult and self destruct cooldowns
 	sf::Vector2f velocity, mouseDir, mousePos;
 
+	float rot9s, dist9s;
+
 	Event current = Event::CHILL, old = Event::CHILL;
+	Event9s current9s = Event9s::CHILL, old = Event9s::CHILL;
 
 	std::map<std::string, SpriteSheetAnimation> animap;
 	sf::Sprite sprite;
 	SpriteSheetAnimation ssa;
 	ProjectileManager desAndTroy;
+
+
 
 	Player(float maxHP, float maxSpeed)
 		: maxHP(maxHP), hp(maxHP), maxSpeed(maxSpeed), 
@@ -62,6 +68,7 @@ public:
 	}
 
 
+
 	void loadSSA(const std::string& path, const sf::Vector2u& gridSize, const float swapInterval, const std::string& name) {
 		if (animap.find(name) == animap.end()) {
 			ssa.init(path, gridSize, swapInterval);
@@ -69,9 +76,13 @@ public:
 		}
 	}
 
+
+
 	void removeSSA(const std::string& name) {
 		animap.erase(name);
 	}
+
+
 
 	void draw(sf::RenderWindow* window) {
 		window->draw(sprite);
@@ -80,11 +91,28 @@ public:
 		}
 	}
 
-	void stageUpdates(Pos_2B& updateStruct) {
+
+
+	void stageUpdates2b(Msg2B& updateStruct) 
+	{
+		updateStruct.type = MsgType::T_2B;
 		updateStruct.x = posMin.x;
 		updateStruct.y = posMin.y;
-		updateStruct.type = MsgType::T_2B;
+		updateStruct.state = current;
+		updateStruct.ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		
 	}
+
+
+
+	void stageUpdates9s(Msg9S& updateStruct)
+	{
+		updateStruct.type = MsgType::T_9S;
+		updateStruct.angle = rot9s;
+		updateStruct.distance = dist9s;
+		updateStruct.state = current9s;
+	}
+
 
 	void OnNotify(const InputManager& iMan, const Event& cmd);
 	void Update(float dTime);

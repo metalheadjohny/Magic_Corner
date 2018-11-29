@@ -1,18 +1,21 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <string>
+#include <vector>
 
-class LoadingScreen {
+
+class HostingScreen {
 
 	sf::Font f;
 	sf::Text t;
-	
 	sf::Sprite sprite;
 
 public:
 	
-	LoadingScreen() {};
-	~LoadingScreen() {};
+	HostingScreen() {};
+	~HostingScreen() {};
+
+
 
 	void setUp(sf::Sprite& loadingSprite, sf::RenderWindow& w, std::string message) {
 
@@ -32,17 +35,23 @@ public:
 		sprite.setPosition(w.getSize().x * 0.5f, w.getSize().y * 0.5f);
 	}
 
+
+
 	bool update(sf::RenderWindow& w) {
 		draw(w);
 		return processUpdates(w);
 	}
+
+
 
 	void draw(sf::RenderWindow& w) {
 		w.draw(sprite);
 		w.draw(t);
 	}
 
-	bool  processUpdates(sf::RenderWindow& w) {
+
+
+	bool processUpdates(sf::RenderWindow& w) {
 
 		sf::Event e;
 		bool goBack = false;
@@ -62,4 +71,5 @@ public:
 
 		return goBack;
 	}
+
 };

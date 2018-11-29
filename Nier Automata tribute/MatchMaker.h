@@ -24,6 +24,8 @@ class MatchMaker{
 	std::string oldId = "-1";	//for dropping the hosting after you are done
 
 public:
+
+	bool hosting = false;
 	
 	MatchMaker();
 
@@ -82,6 +84,9 @@ public:
 
 		sf::Http::Response response = sendRequest(sf::Http::Request::Method::Post, "", params);
 		parseResponse(response, oldId);
+
+		hosting = true;
+
 		return oldId;
 	}
 
@@ -98,6 +103,8 @@ public:
 		parseResponse(response, responseString);
 
 		std::cout << responseString << std::endl;
+
+		hosting = false;
 	}
 
 

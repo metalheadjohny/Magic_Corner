@@ -80,14 +80,14 @@ class GUI{
 	Button ROOT;
 	sf::Font f;
 	sf::RenderWindow* renderWindow;
-	GameState activeTag = GameState::NONE;
+	GameState activeTag = GameState::MAIN_MENU;
 
 public:
 	GUI(sf::RenderWindow* w);
 	~GUI();
 
 	void init();
-	void react(sf::RenderWindow& window, sf::Event& e, GameState& gameState);
+	bool react(sf::RenderWindow& window, sf::Event& e, GameState& gameState);
 	void draw();
 	void onClick(GameState& gs);
 };
