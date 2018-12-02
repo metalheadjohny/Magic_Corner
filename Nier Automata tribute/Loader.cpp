@@ -26,7 +26,7 @@ bool Loader::LoadCharacter(Player& player) {
 }
 
 
-bool Loader::LoadKeyBindings(const std::string& keyBindsPath, std::map<Event, sf::Keyboard::Key>& keyCommandMap) {
+bool Loader::LoadKeyBindings(const std::string& keyBindsPath, std::map<Event2B, sf::Keyboard::Key>& keyCommandMap) {
 
 	std::string line;
 	std::ifstream fileStream;
@@ -40,7 +40,7 @@ bool Loader::LoadKeyBindings(const std::string& keyBindsPath, std::map<Event, sf
 		std::string cmdName = line.substr(0, line.find_first_of('='));
 		char cmdKey = line.substr(line.find_first_of('=') + 1, line.size()).at(0);
 
-		keyCommandMap.at(static_cast<Event>(std::stoi(cmdName))) = static_cast<sf::Keyboard::Key>(cmdKey);
+		keyCommandMap.at(static_cast<Event2B>(std::stoi(cmdName))) = static_cast<sf::Keyboard::Key>(cmdKey);
 	}
 		
 

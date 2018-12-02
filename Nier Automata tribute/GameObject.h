@@ -7,8 +7,6 @@
 #include <chrono>
 
 class InputManager;
-enum Event;
-
 
 
 class GameObject{
@@ -34,112 +32,132 @@ public:
 
 
 
-class Player : public GameObject {
-
-public:
-	float elapsed = 0.0f; 
-	
-	int rot;	//might not be necessary @TODO review
-
-	float maxHP, maxSpeed, hp, speed;
-	float mDCD, mBUCD, mSDCD, cDCD, cBUCD, cSDCD;	//max and current dodge, bot ult and self destruct cooldowns
-	sf::Vector2f velocity, mouseDir, mousePos;
-
-	float rot9s, dist9s;
-
-	Event current = Event::CHILL, old = Event::CHILL;
-	Event9s current9s = Event9s::CHILL, old = Event9s::CHILL;
+struct State2B 
+{
+	int rot;
+	float maxHP = 100.f, maxSpeed = 300.f, hp = 100.f, speed = 300.f, elapsed = 0.0f;
+	Event2B current = Event2B::CHILL, old = Event2B::CHILL;
 
 	std::map<std::string, SpriteSheetAnimation> animap;
-	sf::Sprite sprite;
 	SpriteSheetAnimation ssa;
+	sf::Sprite sprite;
+
 	ProjectileManager desAndTroy;
 
+	State2B() : ssa(&sprite){}
+};
 
 
-	Player(float maxHP, float maxSpeed)
-		: maxHP(maxHP), hp(maxHP), maxSpeed(maxSpeed), 
-		speed(maxSpeed), mDCD(3.f), mBUCD(10.f), mSDCD(60.f),
-		ssa(SpriteSheetAnimation(&sprite))
 
-	{
-		cDCD = cBUCD = cSDCD = 0.f;
+struct State9S {
+	float ANGULAR_SPEED = 60.f;	//in degrees
+	float rot = 0, dist = 100;
+	const sf::Vector2f refDir = sf::Vector2f(1.0f, 0.0f);
+	Event9s current = Event9s::CHILL9S, old = Event9s::CHILL9S;
+
+	std::map<std::string, SpriteSheetAnimation> animap;
+	SpriteSheetAnimation ssa;
+	sf::Sprite sprite;
+
+	State9S() : ssa(&sprite) {}
+};
+
+
+
+class Player : public GameObject {
+
+	const std::string BASEPATH = "../Assets/";
+
+public:
+
+	State2B s2b;
+	State9S s9s;
+
+	bool stateChanged2b = false, stateChanged9s = false;
+	sf::Vector2f velocity, mouseDir, mousePos;
+
+	bool outdated = true;
+
+
+	Player(float maxHP, float maxSpeed){
+		
 		mousePos = sf::Vector2f(0, 0);
+		posMin = sf::Vector2f(97.f, 97.f);
+
+		//load 2b
+		loadSSA(BASEPATH + "2B exivus sprites\\limit_break.png", sf::Vector2u(3, 17), 5.f, "lb");
+		loadSSA(BASEPATH + "2B exivus sprites\\move_left.png", sf::Vector2u(1, 1), 10.f, "walk_left");
+		loadSSA(BASEPATH + "2B exivus sprites\\move_right.png", sf::Vector2u(1, 1), 10.f, "walk_right");
+		loadSSA(BASEPATH + "2B exivus sprites\\magic_attack.png", sf::Vector2u(3, 2), 10.f, "ranged_attack");
+		loadSSA(BASEPATH + "2B exivus sprites\\sorted\\m2b_pat_bot.png", sf::Vector2u(20, 1), 2.f, "idle");
+		
+		//load 9s
+		loadSSA9s(BASEPATH + "Sprites\\nines.png", sf::Vector2u(1, 2), 1.f, "9s_idle");
+		s9s.sprite.setOrigin(s9s.sprite.getLocalBounds().width * 0.5f, s9s.sprite.getLocalBounds().height * 0.5f * 0.5f);
 	}
 
 
 
 	void loadSSA(const std::string& path, const sf::Vector2u& gridSize, const float swapInterval, const std::string& name) {
-		if (animap.find(name) == animap.end()) {
-			ssa.init(path, gridSize, swapInterval);
-			animap.insert(std::make_pair(name, ssa));
+		if (s2b.animap.find(name) == s2b.animap.end()) {
+			s2b.ssa.init(path, gridSize, swapInterval);
+			s2b.animap.insert(std::make_pair(name, s2b.ssa));
 		}
 	}
 
 
 
-	void removeSSA(const std::string& name) {
-		animap.erase(name);
+	void loadSSA9s(const std::string& path, const sf::Vector2u& gridSize, const float swapInterval, const std::string& name) {
+		if (s9s.animap.find(name) == s9s.animap.end()) {
+			s9s.ssa.init(path, gridSize, swapInterval);
+			s9s.animap.insert(std::make_pair(name, s9s.ssa));
+		}
 	}
+
+
+
+	/*void removeSSA(const std::string& name) {
+		s2b.animap.erase(name);
+	}*/
 
 
 
 	void draw(sf::RenderWindow* window) {
-		window->draw(sprite);
-		for (auto a : desAndTroy.bullets) {
+		window->draw(s2b.sprite);
+		window->draw(s9s.sprite);
+		for (auto a : s2b.desAndTroy.bullets) {
 			window->draw(a.rs);
 		}
+		window->draw(s9s.sprite);
 	}
 
 
 
-	void stageUpdates2b(Msg2B& updateStruct) 
+	Msg2B stageUpdates2b()
 	{
-		updateStruct.type = MsgType::T_2B;
+		Msg2B updateStruct;
+		updateStruct.type = PlayerType::T_2B;
 		updateStruct.x = posMin.x;
 		updateStruct.y = posMin.y;
-		updateStruct.state = current;
+		updateStruct.state = s2b.current;
 		updateStruct.ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-		
+		return updateStruct;
 	}
 
 
 
-	void stageUpdates9s(Msg9S& updateStruct)
+	Msg9S stageUpdates9s()
 	{
-		updateStruct.type = MsgType::T_9S;
-		updateStruct.angle = rot9s;
-		updateStruct.distance = dist9s;
-		updateStruct.state = current9s;
+		Msg9S updateStruct;
+		updateStruct.type = PlayerType::T_9S;
+		updateStruct.angle = s9s.rot;
+		updateStruct.distance = s9s.dist;
+		updateStruct.state = s9s.current;
+		return updateStruct;
 	}
 
 
-	void OnNotify(const InputManager& iMan, const Event& cmd);
+	void OnNotify2b(const InputManager& iMan, const Event2B& cmd);
+	void OnNotify9s(const InputManager& iMan, const Event9s& cmd);
 	void Update(float dTime);
-	//void Jump(float dTime);
 };
-
-
-
-
-
-
-
-
-
-
-
-
-/* not using this any more
-Player(float maxHP, float maxSpeed, const std::string& basePath, const std::string& listPath)
-	: maxHP(maxHP), hp(maxHP), maxSpeed(maxSpeed), s(maxSpeed), mDCD(3.f), mBUCD(10.f), mSDCD(60.f), cat(AnimType::IDLE)
-{
-	cDCD = cBUCD = cSDCD = 0.f;
-	loadAnim(basePath, listPath);
-}
-
-bool loadAnim(const std::string& basePath, const std::string& listPath) {
-	bool result =  animation.initFromFile(basePath, listPath);
-	return result;
-}
-*/

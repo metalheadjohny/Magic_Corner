@@ -26,10 +26,30 @@ public:
 	bool accept();
 	void closeListener();
 	void connect(std::string ip, int port);
-	void send(sf::Packet p);
-	void send9s(sf::Packet p);
+	void send(sf::Packet& p);
+	void send9s(sf::Packet& p);
 	void receive(sf::Packet& p);
+
+
+
+	void block() {
+		listener.setBlocking(true);
+		cooperator.setBlocking(true);
+		socket.setBlocking(true);
+	}
+
+
+
+	void unblock() {
+		listener.setBlocking(false);
+		cooperator.setBlocking(false);
+		socket.setBlocking(false);
+	}
 	
-	sf::TcpSocket& getRefToClientSocket() { return socket; }
+
+
+	sf::TcpSocket& getRefToClientSocket() { 
+		return socket; 
+	}
 };
 

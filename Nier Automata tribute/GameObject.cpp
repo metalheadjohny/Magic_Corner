@@ -10,46 +10,45 @@ GameObject::~GameObject()
 }
 
 
-void Player::OnNotify(const InputManager& iMan, const Event& event) {
+void Player::OnNotify2b(const InputManager& iMan, const Event2B& event) {
 
-	current = event;
+	s2b.current = event;
+
+	if (s2b.current != s2b.old)
+		stateChanged2b = true;
+
 	switch (event) {
-		case Event::CHILL:
+		case Event2B::CHILL:
 			velocity = sf::Vector2f(0.f, 0.f);
 			break;
-		case Event::DODGE:
+		case Event2B::DODGE:
 			velocity = sf::Vector2f(0.f, 0.f);
-			//play dodge anim aka fade out or some shit
 			break;
-		case Event::MOVE_LEFT:
+		case Event2B::MOVE_LEFT:
 			velocity = sf::Vector2f(-1.f, 0.f);
-			rot = -1.f;
+			s2b.ssa = s2b.animap.at("walk_left");
+			s2b.rot = -1.f;
 			break;
-		case Event::MOVE_UP:
+		case Event2B::MOVE_UP:
 			velocity = sf::Vector2f(0.f, -1.f);
 			break;
-		case Event::MOVE_DOWN:
+		case Event2B::MOVE_DOWN:
 			velocity = sf::Vector2f(0.f, 1.f);
 			break;
-		case Event::MOVE_RIGHT:
+		case Event2B::MOVE_RIGHT:
 			velocity = sf::Vector2f(1.f, 0.f);
-			rot = 1.f;
+			s2b.ssa = s2b.animap.at("walk_right");
+			s2b.rot = 1.f;
 			break;
-		case Event::MELEE_ATTACK:
+		case Event2B::MELEE_ATTACK:
 			//play anim, do shit
 			break;
-		case Event::RANGED_ATTACK:
+		case Event2B::RANGED_ATTACK:
 			velocity = sf::Vector2f(0.0f, 0.0f);
-			desAndTroy.shoot(posMin + sf::Vector2f(sprite.getLocalBounds().width  * 0.5f, sprite.getLocalBounds().height  * 0.5f),
+			s2b.ssa = s2b.animap.at("ranged_attack");
+			s2b.desAndTroy.shoot(posMin + sf::Vector2f(s2b.sprite.getLocalBounds().width  * 0.5f, s2b.sprite.getLocalBounds().height  * 0.5f),
 				sf::Vector2f(mouseDir.x, mouseDir.y), 5, 50);
 			break;
-		case Event::SELF_DESTRUCT:
-
-			break;
-		case Event::ULTIMATE:
-
-			break;
-
 		default:
 			std::cout << "Unknown command received!" << std::endl;
 			break;
@@ -58,39 +57,64 @@ void Player::OnNotify(const InputManager& iMan, const Event& event) {
 
 
 
+void Player::OnNotify9s(const InputManager& iMan, const Event9s& cmd) {
+
+	s9s.current = cmd;
+	switch (cmd) {
+	default:
+		std::cout << "Unknown command received!" << std::endl;
+		break;
+	}
+}
+
+
+
 void Player::Update(float dTime){
-		
-	posMin += velocity * dTime * speed;
-	sprite.setPosition(posMin);
 
+	//general updates
+	posMin += velocity * dTime * s2b.speed;
 	mouseDir = mousePos - posMin;
-	float length = sqrt(mouseDir.x * mouseDir.x + mouseDir.y * mouseDir.y);
-	mouseDir.x /= length;
-	mouseDir.y /= length;
-	desAndTroy.update(dTime);
+	mouseDir = mouseDir / sqrt(mouseDir.x * mouseDir.x + mouseDir.y * mouseDir.y);
+	//float length = sqrt(mouseDir.x * mouseDir.x + mouseDir.y * mouseDir.y);	mouseDir.x /= length; mouseDir.y /= length;
 
-	if (current == Event::MOVE_LEFT) {
-		ssa = animap.at("walk_left");
-	}
+	//2b updates
+	s2b.sprite.setPosition(posMin);
+	s2b.desAndTroy.update(dTime);
 
-	if (current == Event::MOVE_RIGHT) {
-		ssa = animap.at("walk_right");
-	}
-
-	if (current == Event::RANGED_ATTACK) {
-		ssa = animap.at("ranged_attack");
-	}
-
-	if (current != old) {
-		if (current == Event::CHILL) {
-			ssa = animap.at("idle");
-			sprite.setScale(sf::Vector2f(1.0f, 1.0f));
+	if (s2b.current != s2b.old) {
+		if (s2b.current == Event2B::CHILL) {
+			s2b.ssa = s2b.animap.at("idle");
+			s2b.sprite.setScale(sf::Vector2f(1.0f, 1.0f));
 		}
 	}
-	old = current;
-	ssa.play(dTime);
+	s2b.old = s2b.current;
+	s2b.ssa.play(dTime);
 
-	sprite.setScale(sf::Vector2f(86.0f / (float)ssa.cellSize.x, 86.0f / (float)ssa.cellSize.y));
+	s2b.sprite.setScale(sf::Vector2f(86.0f / (float)s2b.ssa.cellSize.x, 86.0f / (float)s2b.ssa.cellSize.y));
+
+
+
+	//9s updates
+	if (s9s.current == Event9s::ROTATE_NEG)
+		s9s.rot += s9s.ANGULAR_SPEED * dTime;
+	
+	if (s9s.current == Event9s::ROTATE_POS)
+		s9s.rot -= s9s.ANGULAR_SPEED * dTime;
+
+	sf::Vector2f offset9s = 
+		sf::Vector2f(
+			cos(s9s.rot) * s9s.refDir.x - sin(s9s.rot) * s9s.refDir.y,
+			sin(s9s.rot) * s9s.refDir.x + cos(s9s.rot) * s9s.refDir.y
+		) * s9s.dist;
+
+	s9s.sprite.setPosition(
+		s2b.sprite.getPosition() +
+		sf::Vector2f(s2b.sprite.getLocalBounds().width, s2b.sprite.getLocalBounds().height)  * 0.5f +
+		offset9s);
+	s9s.ssa = s9s.animap.at("9s_idle");
+	s9s.sprite.setScale(sf::Vector2f(48.0f / (float)s9s.ssa.cellSize.x, 48.0f / (float)s9s.ssa.cellSize.y));
+	s9s.ssa.play(dTime);
+	s9s.old = s9s.current;
 }
 
 

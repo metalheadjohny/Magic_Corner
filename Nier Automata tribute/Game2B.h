@@ -2,33 +2,37 @@
 #include "GameObject.h"
 #include <SFML/Graphics.hpp>
 #include "TileMapper.h"
+#include "Relay.h"
 
 class Game2B{
 
-	const float UPDATE_INTERVAL = 0.33f, ww = 1920.f, wh = 1080.f;
+	const float UPDATE_INTERVAL = 0.1f, ww = 1920.f, wh = 1080.f;
 	const std::string BASEPATH = "../Assets/";
 	float late = 0.f;
 	
+
 	InputManager iMan;
+	Relay* relay;
+	uint64_t lastTimestamp = 0;
 
 	sf::RenderWindow& renderWindow;
 	sf::View view;
-	
 	TileMapper tileMapper;
+
 	sf::Event e;
 
 	void resolveCollisions(float frameTime) 
 	{
 		for (auto a : tileMapper.level) {
-			if (a.collides && p2b.sprite.getGlobalBounds().intersects(a.rs.getGlobalBounds())) {
-				p2b.posMin -= p2b.velocity * frameTime * p2b.speed;
+			if (a.collides && player.s2b.sprite.getGlobalBounds().intersects(a.rs.getGlobalBounds())) {
+				player.posMin -= player.velocity * frameTime * player.s2b.speed;
 			}
 		}
 	}
 
 public:
 
-	Player p2b;
+	Player player;
 	bool first = true;
 
 	Game2B(sf::RenderWindow& w);
@@ -36,18 +40,11 @@ public:
 
 	void init() {
 
-		iMan.attachObserver(p2b);
+		iMan.attachObserver2b(player);
 
 		//set up the level
 		tileMapper.loadFromFile(BASEPATH + "LevelTileMap.txt", "refinery.png");
-
-		//set up 2b
-		p2b.loadSSA(BASEPATH + "2B exivus sprites\\limit_break.png", sf::Vector2u(3, 17), 5.f, "lb");
-		p2b.loadSSA(BASEPATH + "2B exivus sprites\\move_left.png", sf::Vector2u(1, 1), 10.f, "walk_left");
-		p2b.loadSSA(BASEPATH + "2B exivus sprites\\move_right.png", sf::Vector2u(1, 1), 10.f, "walk_right");
-		p2b.loadSSA(BASEPATH + "2B exivus sprites\\magic_attack.png", sf::Vector2u(3, 2), 10.f, "ranged_attack");
-		p2b.loadSSA(BASEPATH + "2B exivus sprites\\sorted\\m2b_pat_bot.png", sf::Vector2u(20, 1), 2.f, "idle");
-		p2b.posMin = sf::Vector2f(97.f, 97.f);
+		
 
 		view = sf::View(sf::Vector2f(0, 0), sf::Vector2f(ww, wh));
 		renderWindow.setView(view);
@@ -59,17 +56,24 @@ public:
 
 		iMan.processInput(w, e);
 
-		p2b.Update(frameTime);
+		player.Update(frameTime);
+		relay->accumulate(player.stageUpdates2b());
 
-		view.setCenter(p2b.posMin);
+		view.setCenter(player.posMin);
+		renderWindow.setView(view);
 		resolveCollisions(frameTime);
 		draw(renderWindow);
 
 		late += frameTime;
 		if (late >= UPDATE_INTERVAL) {
 
-			//load updates
-			p2b.stageUpdates(pos2b);	//this is ugly af, make a staging class that does all this
+			if (player.outdated) {
+				relay->relay();
+			}
+
+
+			/*//load updates
+			p2b.stagepdates2b();
 			pos2b.Load(updatePacket);
 
 			//send data
@@ -78,9 +82,17 @@ public:
 
 			g2b.update9s();
 			g2b.updateObservers();
+			*/
+			
+			late -= UPDATE_INTERVAL;	//reset the interval
+		}
+	}
 
-			//reset the interval
-			late -= UPDATE_INTERVAL;
+
+
+	void receiveUpdates(Msg9S msg) {
+		if (lastTimestamp < msg.ms) {
+			lastTimestamp = msg.ms;
 		}
 	}
 
@@ -92,7 +104,7 @@ public:
 		for (auto a : tileMapper.level)
 			w.draw(a.rs);
 
-		p2b.draw(&w);
+		player.draw(&w);
 	}
 
 
@@ -102,15 +114,12 @@ public:
 	}
 
 
-
-	void update9s() {
+	void updateObservers() {
 
 	}
 
-
-
-	void updateObservers() {
-
+	void attachRelay(Relay& relayRef) {
+		relay = &relayRef;
 	}
 };
 

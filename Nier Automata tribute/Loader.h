@@ -16,7 +16,7 @@ public:
 	bool LoadMap(const std::string& levelFilePath);
 	bool LoadCharacter(Player& player);
 	bool LoadSound(const std::vector<std::string>& soundPaths);
-	bool LoadKeyBindings(const std::string& keyBindsPath, std::map<Event, sf::Keyboard::Key>& keyCommandMap);	//
+	bool LoadKeyBindings(const std::string& keyBindsPath, std::map<Event2B, sf::Keyboard::Key>& keyCommandMap);	//
 
 };
 

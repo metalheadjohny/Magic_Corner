@@ -4,9 +4,6 @@
 
 
 TCPInterface::TCPInterface(){
-
-	listener.setBlocking(false);
-	cooperator.setBlocking(false);
 }
 
 
@@ -64,27 +61,28 @@ void TCPInterface::connect(std::string ip, int port)
 
 
 
-void TCPInterface::send(sf::Packet p) 
+void TCPInterface::send(sf::Packet& p) 
 {
 	int tries = 1;
-	while (socket.send(p) != sf::Socket::Done) {
+
+	status = cooperator.send(p);
+	while (status != sf::Socket::Done)
 		
 		if (++tries == 10) {
-			std::cout << "Giving up!" << std::endl;
+			std::cout << "Giving up 2b!" << std::endl;
 			break;
 		}
-	}
 }
 
 
 
-void TCPInterface::send9s(sf::Packet p) 
+void TCPInterface::send9s(sf::Packet& p) 
 {
 	int tries = 1;
 	while (cooperator.send(p) != sf::Socket::Done) {
 
 		if (++tries == 10) {
-			std::cout << "Giving up!" << std::endl;
+			std::cout << "Giving up 9s!" << std::endl;
 			break;
 		}
 	}

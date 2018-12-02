@@ -6,7 +6,7 @@
 
 class Player;
 
-enum Event {
+enum Event2B {
 	CHILL,
 	MOVE_RIGHT,
 	MOVE_LEFT,
@@ -21,53 +21,70 @@ enum Event {
 };
 
 enum Event9s {
-	CHILL,
-	ROTATE,
+	CHILL9S,
+	ROTATE_POS,
+	ROTATE_NEG,
 	HACK,
 	SHIELD,
 	PHASE,
-	PUSH,
+	PUSH
 };
 
 
 class InputManager{
 
-	std::vector<Player*> observers;
+	std::vector<Player*> observers2b, observers9s;
 
 public:
 
-	std::map<Event, sf::Keyboard::Key> keyCommandMap;
+	std::map<Event2B, sf::Keyboard::Key> keyCmdMap2b;
+	std::map<Event9s, sf::Keyboard::Key> keyCmdMap9s;
 
-	InputManager() {
-		//keyCommandMap = std::map<Event, sf::Keyboard::Key>();
+	InputManager() 
+	{
+		//2b commands
+		keyCmdMap2b.insert(std::make_pair(MOVE_UP, sf::Keyboard::Key::W));
+		keyCmdMap2b.insert(std::make_pair(MOVE_DOWN, sf::Keyboard::Key::S));
+		keyCmdMap2b.insert(std::make_pair(MOVE_LEFT, sf::Keyboard::Key::A));
+		keyCmdMap2b.insert(std::make_pair(MOVE_RIGHT, sf::Keyboard::Key::D));
+		keyCmdMap2b.insert(std::make_pair(DODGE, sf::Keyboard::Key::Space));
+		keyCmdMap2b.insert(std::make_pair(MELEE_ATTACK, sf::Keyboard::Key::E));
+		keyCmdMap2b.insert(std::make_pair(RANGED_ATTACK, sf::Keyboard::Key::Q));
+		keyCmdMap2b.insert(std::make_pair(ULTIMATE, sf::Keyboard::Key::R));
+		keyCmdMap2b.insert(std::make_pair(SELF_DESTRUCT, sf::Keyboard::Key::Enter));
 
-		keyCommandMap.insert(std::make_pair(MOVE_UP, sf::Keyboard::Key::W));
-		keyCommandMap.insert(std::make_pair(MOVE_DOWN, sf::Keyboard::Key::S));
-		keyCommandMap.insert(std::make_pair(MOVE_LEFT, sf::Keyboard::Key::A));
-		keyCommandMap.insert(std::make_pair(MOVE_RIGHT, sf::Keyboard::Key::D));
-		keyCommandMap.insert(std::make_pair(DODGE, sf::Keyboard::Key::Space));
-		keyCommandMap.insert(std::make_pair(MELEE_ATTACK, sf::Keyboard::Key::E));
-		keyCommandMap.insert(std::make_pair(RANGED_ATTACK, sf::Keyboard::Key::Q));
-		keyCommandMap.insert(std::make_pair(ULTIMATE, sf::Keyboard::Key::R));
-		keyCommandMap.insert(std::make_pair(SELF_DESTRUCT, sf::Keyboard::Key::Enter));
+		//9s commands
+		keyCmdMap9s.insert(std::make_pair(ROTATE_POS, sf::Keyboard::Key::Left));
+		keyCmdMap9s.insert(std::make_pair(ROTATE_NEG, sf::Keyboard::Key::Right));
+		keyCmdMap9s.insert(std::make_pair(HACK, sf::Keyboard::Key::Q));
+		keyCmdMap9s.insert(std::make_pair(SHIELD, sf::Keyboard::Key::W));
+		keyCmdMap9s.insert(std::make_pair(PUSH, sf::Keyboard::Key::E));
+		keyCmdMap9s.insert(std::make_pair(PHASE, sf::Keyboard::Key::R));
 	}
 
 	~InputManager();
 	
 
-	void attachObserver(Player& go){
-		observers.push_back(&go);
+	void attachObserver2b(Player& player){
+		observers2b.push_back(&player);
 	}
 
-
-	void detachObserver(const Player& go) {
-		observers.erase(std::remove(observers.begin(), observers.end(), &go), observers.end());
+	void detachObserver2b(const Player& player) {
+		observers2b.erase(std::remove(observers2b.begin(), observers2b.end(), &player), observers2b.end());
 	}
 
+	void attachObserver9s(Player& player) {
+		observers9s.push_back(&player);
+	}
 
-	void notifyObservers(const InputManager& inputManager, const Event& event);
+	void detachObserver9s(const Player& player) {
+		observers9s.erase(std::remove(observers9s.begin(), observers9s.end(), &player), observers9s.end());
+	}
+
+	void notifyObservers2b(const InputManager& inputManager, const Event2B& event);
 	
-
+	void notifyObservers9s(const InputManager& inputManager, const Event9s& event);
+	
 	void processInput(sf::RenderWindow& window, sf::Event& e);
 };
 

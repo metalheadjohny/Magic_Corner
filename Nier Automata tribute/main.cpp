@@ -13,6 +13,7 @@
 static const float HOST_LIST_UPDATE_INTERVAL = 3.0f;
 float ww = 1920.f, wh = 1080.f, elapsed = 0.f, elapsedSinceHostUpdate = 0.f, late = 0.f, frameTime = 0.0f;
 bool run = true;
+
 std::pair<std::string, int> joinIpPort;
 
 MatchMaker matchMaker;
@@ -37,11 +38,13 @@ int main() {
 	Game9S g9s(window);
 	gui.init();
 
+	//network stuff
 	matchMaker.setHost("127.0.0.1");
-	relay.establish();
+	relay.init();
+	relay.tcpi.unblock();
 
-	iMan.attachObserver(g2b.p2b);
-	iMan.attachObserver(g9s.p9s);
+	iMan.attachObserver2b(g2b.player);
+	iMan.attachObserver2b(g9s.player);
 
 	sf::Clock deltaClock;
 	sf::Event e;
@@ -103,7 +106,6 @@ int main() {
 			elapsedSinceHostUpdate += frameTime;
 			if (elapsedSinceHostUpdate > HOST_LIST_UPDATE_INTERVAL) {
 				elapsedSinceHostUpdate -= HOST_LIST_UPDATE_INTERVAL;
-
 				jScreen.updateList(matchMaker.listGames());
 			}
 
@@ -115,8 +117,10 @@ int main() {
 
 			//when accepted by the sever
 			if (joinIpPort.second != -1) {
-				gameState = GameState::PLAYER_9S;	//switch to GameState::PLAYER2
+				relay.tcpi.block();
 				relay.tcpi.connect(joinIpPort.first, joinIpPort.second);
+				relay.tcpi.unblock();
+				gameState = GameState::PLAYER_9S;
 			}
 			
 		}
@@ -136,17 +140,11 @@ int main() {
 			if (g2b.first) {
 				g2b.init();
 				g2b.first = false;
+				relay.attachPlayerObserver(g2b.player);
+				g2b.attachRelay(relay);
 			}
 
 			g2b.update(frameTime, window);
-
-			//send position, state of animation and battle commands
-			g2b.update9s();
-			//receive the updates from the other player
-			g2b.receiveUpdates();
-
-			//send updates to observers
-			g2b.updateObservers();
 		}
 
 
@@ -156,12 +154,11 @@ int main() {
 			if (g9s.first) {
 				g9s.init();
 				g9s.first = false;
+				relay.attachPlayerObserver(g9s.player);
+				g9s.attachRelay(relay);
 			}
 
 			g9s.update(frameTime);
-			//send degree of rotation, state of animation and support commands
-			//receive the updates from the other player
-			//render game
 		}
 
 
