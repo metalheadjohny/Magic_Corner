@@ -4,13 +4,13 @@
 #include "TileMapper.h"
 #include "Relay.h"
 
+
 class Game2B{
 
-	const float UPDATE_INTERVAL = 0.1f, ww = 1920.f, wh = 1080.f;
+	const float UPDATE_INTERVAL = 0.1f, ww = 1920.f * 0.5f, wh = 1080.f * 0.5f;
 	const std::string BASEPATH = "../Assets/";
 	float late = 0.f;
 	
-
 	InputManager iMan;
 	Relay* relay;
 	uint64_t lastTimestamp = 0;
@@ -40,52 +40,43 @@ public:
 
 	void init() {
 
+		//only attach this player to listen for 2b events
 		iMan.attachObserver2b(player);
 
 		//set up the level
 		tileMapper.loadFromFile(BASEPATH + "LevelTileMap.txt", "refinery.png");
 		
-
 		view = sf::View(sf::Vector2f(0, 0), sf::Vector2f(ww, wh));
 		renderWindow.setView(view);
 	}
 
 
 
-	void update(float frameTime, sf::RenderWindow& w) {
-
+	void update(float frameTime, sf::RenderWindow& w) 
+	{
 		iMan.processInput(w, e);
 
 		player.Update(frameTime);
-		relay->accumulate(player.stageUpdates2b());
+		resolveCollisions(frameTime);
 
 		view.setCenter(player.posMin);
 		renderWindow.setView(view);
-		resolveCollisions(frameTime);
-		draw(renderWindow);
 
 		late += frameTime;
 		if (late >= UPDATE_INTERVAL) {
 
-			if (player.outdated) {
+
+			if (player.stateChanged2b) {
+				relay->accumulate2b(player.stageUpdates2b());
 				relay->relay();
+				player.stateChanged2b = false;
 			}
-
-
-			/*//load updates
-			p2b.stagepdates2b();
-			pos2b.Load(updatePacket);
-
-			//send data
-			tcpi.send(updatePacket);
-			updatePacket.clear();
-
-			g2b.update9s();
-			g2b.updateObservers();
-			*/
 			
-			late -= UPDATE_INTERVAL;	//reset the interval
+			//reset the interval
+			late -= UPDATE_INTERVAL;
 		}
+
+		draw(renderWindow);
 	}
 
 

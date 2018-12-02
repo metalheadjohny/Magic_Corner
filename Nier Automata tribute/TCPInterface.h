@@ -26,9 +26,9 @@ public:
 	bool accept();
 	void closeListener();
 	void connect(std::string ip, int port);
-	void send(sf::Packet& p);
-	void send9s(sf::Packet& p);
-	void receive(sf::Packet& p);
+	bool send2b(sf::Packet& p);
+	bool send9s(sf::Packet& p);
+	bool receive(sf::Packet& p);
 
 
 

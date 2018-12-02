@@ -50,9 +50,12 @@ struct State2B
 
 
 struct State9S {
-	float ANGULAR_SPEED = 60.f;	//in degrees
+
+	float ANGULAR_SPEED = 60.f, PUSH_CD = 5.f, HACK_CD = 5.f, sincePush = 5.f, sinceHack = 5.f;
 	float rot = 0, dist = 100;
+	sf::Vector2f offset9s = sf::Vector2f(100.f, 0.f);
 	const sf::Vector2f refDir = sf::Vector2f(1.0f, 0.0f);
+
 	Event9s current = Event9s::CHILL9S, old = Event9s::CHILL9S;
 
 	std::map<std::string, SpriteSheetAnimation> animap;
@@ -75,8 +78,6 @@ public:
 
 	bool stateChanged2b = false, stateChanged9s = false;
 	sf::Vector2f velocity, mouseDir, mousePos;
-
-	bool outdated = true;
 
 
 	Player(float maxHP, float maxSpeed){
@@ -153,6 +154,8 @@ public:
 		updateStruct.angle = s9s.rot;
 		updateStruct.distance = s9s.dist;
 		updateStruct.state = s9s.current;
+		updateStruct.push = s9s.current == Event9s::PUSH ? s9s.offset9s : sf::Vector2f(0, 0);
+		updateStruct.hack = s9s.current == Event9s::HACK ? s9s.offset9s : sf::Vector2f(0, 0);
 		return updateStruct;
 	}
 

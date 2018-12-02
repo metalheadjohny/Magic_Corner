@@ -59,11 +59,11 @@ void GUI::init() {
 
 bool GUI::react(sf::RenderWindow& window, sf::Event& e, GameState& gameState) {
 	
-	sf::Vector2f mousePos = static_cast<sf::Vector2f>(sf::Mouse::getPosition());
+	sf::Vector2f mouse_world = window.mapPixelToCoords(sf::Mouse::getPosition(window));
 
 	for (Button& b : ROOT.children) {
 		
-		if (b.btnRect.getGlobalBounds().contains(mousePos)) 
+		if (b.btnRect.getGlobalBounds().contains(mouse_world))
 		{
 			if (!b.focused) {
 				b.focus();

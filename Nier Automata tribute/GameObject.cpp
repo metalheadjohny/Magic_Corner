@@ -14,9 +14,6 @@ void Player::OnNotify2b(const InputManager& iMan, const Event2B& event) {
 
 	s2b.current = event;
 
-	if (s2b.current != s2b.old)
-		stateChanged2b = true;
-
 	switch (event) {
 		case Event2B::CHILL:
 			velocity = sf::Vector2f(0.f, 0.f);
@@ -87,12 +84,15 @@ void Player::Update(float dTime){
 			s2b.sprite.setScale(sf::Vector2f(1.0f, 1.0f));
 		}
 	}
-	s2b.old = s2b.current;
+
 	s2b.ssa.play(dTime);
-
 	s2b.sprite.setScale(sf::Vector2f(86.0f / (float)s2b.ssa.cellSize.x, 86.0f / (float)s2b.ssa.cellSize.y));
+	
 
+	if (s2b.current != s2b.old)
+		stateChanged2b = true;
 
+	s2b.old = s2b.current;
 
 	//9s updates
 	if (s9s.current == Event9s::ROTATE_NEG)
@@ -101,7 +101,7 @@ void Player::Update(float dTime){
 	if (s9s.current == Event9s::ROTATE_POS)
 		s9s.rot -= s9s.ANGULAR_SPEED * dTime;
 
-	sf::Vector2f offset9s = 
+	s9s.offset9s =
 		sf::Vector2f(
 			cos(s9s.rot) * s9s.refDir.x - sin(s9s.rot) * s9s.refDir.y,
 			sin(s9s.rot) * s9s.refDir.x + cos(s9s.rot) * s9s.refDir.y
@@ -110,7 +110,7 @@ void Player::Update(float dTime){
 	s9s.sprite.setPosition(
 		s2b.sprite.getPosition() +
 		sf::Vector2f(s2b.sprite.getLocalBounds().width, s2b.sprite.getLocalBounds().height)  * 0.5f +
-		offset9s);
+		s9s.offset9s);
 	s9s.ssa = s9s.animap.at("9s_idle");
 	s9s.sprite.setScale(sf::Vector2f(48.0f / (float)s9s.ssa.cellSize.x, 48.0f / (float)s9s.ssa.cellSize.y));
 	s9s.ssa.play(dTime);

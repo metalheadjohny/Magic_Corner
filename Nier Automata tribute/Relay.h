@@ -34,15 +34,16 @@ public:
 	
 	//receive inbound data and inject it into the main loop, this should act like another processInput, because it is!
 	//it should call divinate on previous results if no new data was available, which will let it run somewhat believably regardless of network issues 
-	Msg2B incorporate2b() {
-
-		Msg2B msg;
+	bool checkFor2BUpdates(Msg2B& msg) 
+	{
 		sf::Packet p;
-		tcpi.receive(p);
-		msg.decipher(p);
-		msg.print();	//todo stop printing later
 
-		return msg;
+		if (tcpi.receive(p)) {
+			msg.decipher(p);
+			msg.print();	//@TODO stop printing later
+			return true;
+		}
+		return false;
 	}
 
 	void incorporate9s() {
@@ -52,8 +53,9 @@ public:
 	//try to guess the hell is gonna happen in between updates
 	void divinate();
 
-	//store messages of 2b accumulated each frame... filter them later
-	void accumulate(Msg2B msg);
+
+	void accumulate2b(Msg2B msg);
+	void accumulate9s(Msg9S msg);
 
 	void attachPlayerObserver(Player& pRef) {
 		player = &pRef;

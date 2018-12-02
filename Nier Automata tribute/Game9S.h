@@ -1,31 +1,39 @@
 #pragma once
 #include "GameObject.h"
-#include "TileMapper.h"
 #include <SFML/Graphics.hpp>
+#include "TileMapper.h"
 #include "Relay.h"
+
 
 class Game9S{
 
-	const float UPDATE_INTERVAL = 0.33f, ww = 1920.f, wh = 1080.f, distanceTo2b = 30.f;
+	const float UPDATE_INTERVAL = 0.1f, ww = 1920.f * 0.5f, wh = 1080.f * 0.5f;
 	const std::string BASEPATH = "../Assets/";
-
-	float angleTo2b;
+	float late = 0.f;
 
 	InputManager iMan;
 	Relay* relay;
 	uint64_t lastTimestamp = 0;
 	
-
 	sf::RenderWindow& renderWindow;
 	sf::View view;
 	TileMapper tileMapper;
 
+	sf::Event e;
+
+	void resolveCollisions(float frameTime)
+	{
+		for (auto a : tileMapper.level) {
+			if (a.collides && player.s2b.sprite.getGlobalBounds().intersects(a.rs.getGlobalBounds())) {
+				player.posMin -= player.velocity * frameTime * player.s2b.speed;
+			}
+		}
+	}
+
 public:
 
-	
-	bool first = true;
 	Player player;
-	sf::Event e;
+	bool first = true;
 
 	Game9S(sf::RenderWindow& w);
 	~Game9S();
@@ -34,7 +42,7 @@ public:
 
 	void init() {
 
-		iMan.attachObserver2b(player);
+		iMan.attachObserver9s(player);
 
 		//set up the level
 		tileMapper.loadFromFile(BASEPATH + "LevelTileMap.txt", "refinery.png");
@@ -47,14 +55,44 @@ public:
 
 
 
-	void update(float frameTime) {
-		player.Update(frameTime);	//make a separate function for p9s update
-		view.setCenter(player.posMin);	//keep this centered to 2b not to 9s, it's unnecessary...
-		draw();
+	void update(float frameTime, sf::RenderWindow& w)
+	{
+		iMan.processInput(w, e);
+
+		player.Update(frameTime);
+		resolveCollisions(frameTime);
+
+		view.setCenter(player.posMin);
+		renderWindow.setView(view);
+
+		//receive updates
+		Msg2B msg;
+		if (relay->checkFor2BUpdates(msg))
+		{
+			receiveUpdates(msg);
+		}
+		else
+		{
+			relay->divinate();	//based on the current state, keep going as is by prediction and interpolate...
+		}
+
+		//send updates
+		late += frameTime;
+		if (late >= UPDATE_INTERVAL) {
+
+
+			if (player.stateChanged9s) {
+				relay->accumulate9s(player.stageUpdates9s());
+				relay->relay();
+				player.stateChanged9s = false;
+			}
+
+			//reset the interval
+			late -= UPDATE_INTERVAL;
+		}
 
 		
-		receiveUpdates(relay->incorporate2b());
-		
+		draw();
 	}
 
 

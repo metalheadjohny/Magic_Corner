@@ -30,7 +30,7 @@ void Relay::relay()
 		p << msg.type << msg.x << msg.y << msg.state << msg.ms;
 
 	updates2b.clear();
-	tcpi.send(p);
+	tcpi.send2b(p);
 }
 
 
@@ -42,7 +42,13 @@ void Relay::divinate()
 }
 
 
-void Relay::accumulate(Msg2B msg)
+void Relay::accumulate2b(Msg2B msg)
 {
 	updates2b.push_back(msg);
+}
+
+
+void Relay::accumulate9s(Msg9S msg)
+{
+	updates9s.push_back(msg);
 }

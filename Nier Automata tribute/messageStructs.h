@@ -42,9 +42,10 @@ struct Msg9S {
 	std::uint64_t ms;
 	PlayerType type = PlayerType::T_9S;
 	sf::Int32 int32type;
+	sf::Vector2f push, hack;
 
 	void decipher(sf::Packet& p) {
-		p >> int32type >> angle >> distance >> state >> ms;
+		p >> int32type >> angle >> distance >> state >> ms >> push.x >> push.y >> hack.x >>hack.y;
 		type = static_cast<PlayerType>(int32type);
 	}
 
@@ -52,6 +53,8 @@ struct Msg9S {
 		std::cout << "Type:  " << int32type << std::endl;
 		std::cout << "Pos:   " << angle << " " << distance << std::endl;
 		std::cout << "State: " << int32type << std::endl;
-		std::cout << "Stamp: " << ms << std::endl << std::endl;
+		std::cout << "Stamp: " << ms << std::endl;
+		std::cout << "Push: " << push.x << push.y << std::endl;
+		std::cout << "Hack: " << hack.x << hack.y << std::endl << std::endl;
 	}
 };

@@ -192,11 +192,10 @@ public:
 
 	void highlight(sf::RenderWindow& window) {
 
-		sf::Vector2f mouse_world = window.mapPixelToCoords(sf::Mouse::getPosition());
-		sf::Vector2f mousePosFloat = sf::Vector2f((float)mouse_world.x, (float)mouse_world.y);
+		sf::Vector2f mouse_world = window.mapPixelToCoords(sf::Mouse::getPosition(window));
 
 		for (ListItem& li : uiList) {
-			if (li.listItemBlock.getGlobalBounds().contains(mousePosFloat)) {
+			if (li.listItemBlock.getGlobalBounds().contains(mouse_world)) {
 				li.ID.setStyle(sf::Text::Style::Bold | sf::Text::Style::Underlined);
 				li.ip.setStyle(sf::Text::Style::Bold | sf::Text::Style::Underlined);
 				li.port.setStyle(sf::Text::Style::Bold | sf::Text::Style::Underlined);

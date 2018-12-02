@@ -61,39 +61,60 @@ void TCPInterface::connect(std::string ip, int port)
 
 
 
-void TCPInterface::send(sf::Packet& p) 
+
+/*always make sure to use the send(const void* data, std::size_t size, std::size_t& sent) overload
+ which returns the number of bytes actually sent in the sent reference parameter after the function returns.*/
+
+bool TCPInterface::send2b(sf::Packet& p)
 {
 	int tries = 1;
 
 	status = cooperator.send(p);
-	while (status != sf::Socket::Done)
-		
-		if (++tries == 10) {
-			std::cout << "Giving up 2b!" << std::endl;
-			break;
-		}
-}
+	while (status != sf::Socket::Done || status == sf::Socket::Status::Partial) {
 
-
-
-void TCPInterface::send9s(sf::Packet& p) 
-{
-	int tries = 1;
-	while (cooperator.send(p) != sf::Socket::Done) {
+		cooperator.send(p);
 
 		if (++tries == 10) {
-			std::cout << "Giving up 9s!" << std::endl;
-			break;
+			std::cout << "Giving up on 2b send!" << std::endl;
+			return false;
 		}
 	}
+	
+	if (status == sf::Socket::Done)
+		return true;
+	else
+		return false;
 }
 
 
 
-void TCPInterface::receive(sf::Packet& p) 
+bool TCPInterface::send9s(sf::Packet& p) 
+{
+	int tries = 1;
+	status = cooperator.send(p);
+	while (status != sf::Socket::Done || status == sf::Socket::Status::Partial) {
+
+		cooperator.send(p);
+
+		if (++tries == 10) {
+			std::cout << "Giving up on 9s send!" << std::endl;
+			return false;
+		}
+	}
+
+	if (status == sf::Socket::Done)
+		return true;
+	else
+		return false;
+}
+
+
+
+bool TCPInterface::receive(sf::Packet& p) 
 {
 	status = socket.receive(p);
-
 	if (status != sf::Socket::Status::NotReady)
-		std::cout << p << std::endl;
+		return true;
+
+	return false;
 }

@@ -11,7 +11,7 @@
 #include "InputManager.h"
 
 static const float HOST_LIST_UPDATE_INTERVAL = 3.0f;
-float ww = 1920.f, wh = 1080.f, elapsed = 0.f, elapsedSinceHostUpdate = 0.f, late = 0.f, frameTime = 0.0f;
+float ww = 1920.f * 0.5f, wh = 1080.f * 0.5f, elapsed = 0.f, elapsedSinceHostUpdate = 0.f, late = 0.f, frameTime = 0.0f;
 bool run = true;
 
 std::pair<std::string, int> joinIpPort;
@@ -26,7 +26,7 @@ JoiningScreen jScreen;
 
 InputManager iMan;
 
-sf::RenderWindow window(sf::VideoMode(ww, wh), "Nier but bad", sf::Style::Close | sf::Style::Titlebar | sf::Style::Fullscreen);
+sf::RenderWindow window(sf::VideoMode(ww, wh), "Nier but bad", sf::Style::Close | sf::Style::Titlebar);
 
 int main() {
 
@@ -42,9 +42,6 @@ int main() {
 	matchMaker.setHost("127.0.0.1");
 	relay.init();
 	relay.tcpi.unblock();
-
-	iMan.attachObserver2b(g2b.player);
-	iMan.attachObserver2b(g9s.player);
 
 	sf::Clock deltaClock;
 	sf::Event e;
@@ -139,9 +136,9 @@ int main() {
 		{
 			if (g2b.first) {
 				g2b.init();
-				g2b.first = false;
 				relay.attachPlayerObserver(g2b.player);
 				g2b.attachRelay(relay);
+				g2b.first = false;
 			}
 
 			g2b.update(frameTime, window);
@@ -153,12 +150,12 @@ int main() {
 		{
 			if (g9s.first) {
 				g9s.init();
-				g9s.first = false;
 				relay.attachPlayerObserver(g9s.player);
 				g9s.attachRelay(relay);
+				g9s.first = false;
 			}
 
-			g9s.update(frameTime);
+			g9s.update(frameTime, window);
 		}
 
 
