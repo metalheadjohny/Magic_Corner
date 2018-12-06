@@ -66,6 +66,9 @@
     <ClCompile Include="Game9S.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Roboto.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animation.h">
@@ -123,6 +126,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Game9S.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Roboto.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VictoryScreen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DefeatScreen.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

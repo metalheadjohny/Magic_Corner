@@ -17,17 +17,19 @@ enum Event2B {
 	RANGED_ATTACK,
 	MELEE_ATTACK,
 	ULTIMATE,
-	SELF_DESTRUCT
+	SELF_DESTRUCT,
+	NONE2B
 };
 
-enum Event9s {
+enum Event9S {
 	CHILL9S,
 	ROTATE_POS,
 	ROTATE_NEG,
 	HACK,
 	SHIELD,
 	PHASE,
-	PUSH
+	PUSH,
+	NONE9S
 };
 
 
@@ -38,7 +40,7 @@ class InputManager{
 public:
 
 	std::map<Event2B, sf::Keyboard::Key> keyCmdMap2b;
-	std::map<Event9s, sf::Keyboard::Key> keyCmdMap9s;
+	std::map<Event9S, sf::Keyboard::Key> keyCmdMap9s;
 
 	InputManager() 
 	{
@@ -83,8 +85,9 @@ public:
 
 	void notifyObservers2b(const InputManager& inputManager, const Event2B& event);
 	
-	void notifyObservers9s(const InputManager& inputManager, const Event9s& event);
+	void notifyObservers9s(const InputManager& inputManager, const Event9S& event);
 	
-	void processInput(sf::RenderWindow& window, sf::Event& e);
+	void processInput2B(sf::RenderWindow& window, sf::Event& e);
+	void processInput9S(sf::RenderWindow& window, sf::Event& e);
 };
 

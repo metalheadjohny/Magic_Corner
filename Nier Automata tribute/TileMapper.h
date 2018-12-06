@@ -12,6 +12,11 @@ class TileMapper{
 	const std::string TILEPATH = "../Assets/Walls/";
 
 	void addTile(int x, int y, char t) {
+
+		if (t == '2') {
+			enemyPositions.push_back(sf::Vector2f(y * TILE_SIZE.x, x * TILE_SIZE.y));
+			return;
+		}
 		InanimateObject obj;
 		obj.size = TILE_SIZE;
 		obj.posMin = sf::Vector2f(y * TILE_SIZE.x, x * TILE_SIZE.y);
@@ -28,6 +33,7 @@ public:
 	~TileMapper();
 
 	std::vector<InanimateObject> level;
+	std::vector<sf::Vector2f> enemyPositions;
 	sf::Sprite background;
 	
 

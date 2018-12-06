@@ -8,6 +8,8 @@ enum GameState {
 	QUITTING,
 	PLAYER_2B,
 	PLAYER_9S,
+	DEFEAT,
+	VICTORY,
 	NONE
 };
 

@@ -8,7 +8,7 @@ TileMapper::TileMapper(){
 	texMap.insert(std::make_pair('1', t));
 
 	//t.loadFromFile(TILEPATH + "");
-	texMap.insert(std::make_pair('2', t));
+	//texMap.insert(std::make_pair('2', t));
 
 	t.loadFromFile(TILEPATH + "12.png");
 	texMap.insert(std::make_pair('3', t));

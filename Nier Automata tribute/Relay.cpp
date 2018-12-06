@@ -22,19 +22,31 @@ void Relay::establish()
 }
 
 
-void Relay::relay()
+void Relay::relay2B()
 {
 	sf::Packet p;
 
 	for (auto msg : updates2b)
-		p << msg.type << msg.x << msg.y << msg.state << msg.ms;
+		p << msg.type << msg.state << msg.x << msg.y << msg.dirX << msg.dirY << msg.ms;
 
-	updates2b.clear();
 	tcpi.send2b(p);
+	updates2b.clear();
 }
 
 
-//void Relay::incorporate9s(){}
+
+void Relay::relay9S() 
+{	
+	sf::Packet p;
+
+	for (auto msg : updates9s)
+		p << msg.type << msg.state << msg.angle << msg.distance << msg.push.x << msg.push.y << msg.hack.x << msg.hack.y << msg.ms;
+
+	tcpi.send9s(p);
+
+	updates9s.clear();
+}
+
 
 
 void Relay::divinate()
@@ -51,4 +63,22 @@ void Relay::accumulate2b(Msg2B msg)
 void Relay::accumulate9s(Msg9S msg)
 {
 	updates9s.push_back(msg);
+}
+
+void Relay::relayVictory()
+{
+	sf::Packet p;
+
+	p << MessageType::T_2B_VICTORY;
+
+	while (!tcpi.send2b(p));
+}
+
+void Relay::relayDefeat()
+{
+	sf::Packet p;
+
+	p << MessageType::T_2B_DEFEAT;
+
+	while (!tcpi.send2b(p));
 }

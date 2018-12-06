@@ -1,12 +1,14 @@
 #include "Projectile.h"
+#include "Roboto.h"
+#include "TileMapper.h"
 #include <algorithm>
-
 
 Projectile::Projectile(sf::Vector2f position, sf::Vector2f velocity, sf::Texture* t) : elapsed(0.f), vel(velocity){
 
 	rs.setPosition(position);
 	rs.setTexture(t);
 	rs.setSize(sf::Vector2f(33.f, 33.f));
+	rs.setOrigin(rs.getLocalBounds().width * 0.5f, rs.getLocalBounds().height * 0.5f);
 	lifetime = 3.0f;
 }
 
@@ -16,11 +18,35 @@ Projectile::~Projectile()
 }
 
 
+//abomination.... absolute abomination... but I have no time to implement partitioning
+void Projectile::resolveCollision(std::vector<Roboto>& bots, const std::vector<InanimateObject>& tiles) {
+
+	for (Roboto& r : bots) {
+		if (rs.getGlobalBounds().intersects(r.rs.getGlobalBounds())) {
+			r.exterminate();
+			dead = true;
+			return;
+		}
+	}
+
+	for (const InanimateObject& t : tiles) {
+		if (t.rs.getGlobalBounds().intersects(rs.getGlobalBounds())) {
+			dead = true;
+			return;
+		}
+	}
+}
+
+
 void Projectile::update(float dTime) {
-	rs.move(vel);
+
 	elapsed += dTime;
-	if (elapsed >= lifetime)
+	if (elapsed >= lifetime) {
 		dead = true;
+		return;
+	}
+	
+	rs.move(vel);
 }
 
 void Projectile::setTexture(sf::Texture* t){
@@ -45,12 +71,15 @@ void ProjectileManager::shoot(sf::Vector2f position, sf::Vector2f normalizedDir,
 }
 
 
-void ProjectileManager::update(float dTime) {
+void ProjectileManager::update(float dTime, std::vector<Roboto>& bots, const std::vector<InanimateObject>& tiles) {
 
 	cooldown += dTime;
 
-	for (int i = 0; i < bullets.size(); i++)
+	for (int i = 0; i < bullets.size(); i++) {
 		bullets.at(i).update(dTime);
+		bullets.at(i).resolveCollision(bots, tiles);
+	}
+		
 	
 	bullets.erase(std::remove_if(bullets.begin(), bullets.end(), [](Projectile& b) { return b.isDead(); }), bullets.end());
 

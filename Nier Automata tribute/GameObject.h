@@ -26,7 +26,6 @@ public:
 class InanimateObject : public GameObject {
 
 public:
-	sf::RectangleShape rs;
 	bool collides = true;
 };
 
@@ -47,16 +46,17 @@ struct State2B
 	State2B() : ssa(&sprite){}
 };
 
-
+const float PI = 3.14159f;
 
 struct State9S {
 
-	float ANGULAR_SPEED = 60.f, PUSH_CD = 5.f, HACK_CD = 5.f, sincePush = 5.f, sinceHack = 5.f;
+	float ANGULAR_SPEED = 2 * PI, PUSH_CD = 5.f, HACK_CD = 5.f, sincePush = 5.f, sinceHack = 5.f;
+	float HACK_RANGE = 500.f, PUSH_RANGE = 250.f, HACK_DOT_LMIT = 0.7f, PUSH_DOT_LIMIT = 0.5f;
 	float rot = 0, dist = 100;
 	sf::Vector2f offset9s = sf::Vector2f(100.f, 0.f);
 	const sf::Vector2f refDir = sf::Vector2f(1.0f, 0.0f);
 
-	Event9s current = Event9s::CHILL9S, old = Event9s::CHILL9S;
+	Event9S current = Event9S::CHILL9S, old = Event9S::CHILL9S;
 
 	std::map<std::string, SpriteSheetAnimation> animap;
 	SpriteSheetAnimation ssa;
@@ -116,13 +116,6 @@ public:
 	}
 
 
-
-	/*void removeSSA(const std::string& name) {
-		s2b.animap.erase(name);
-	}*/
-
-
-
 	void draw(sf::RenderWindow* window) {
 		window->draw(s2b.sprite);
 		window->draw(s9s.sprite);
@@ -137,10 +130,11 @@ public:
 	Msg2B stageUpdates2b()
 	{
 		Msg2B updateStruct;
-		updateStruct.type = PlayerType::T_2B;
+		updateStruct.state = s2b.current;
 		updateStruct.x = posMin.x;
 		updateStruct.y = posMin.y;
-		updateStruct.state = s2b.current;
+		updateStruct.dirX = mouseDir.x;
+		updateStruct.dirY = mouseDir.y;
 		updateStruct.ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 		return updateStruct;
 	}
@@ -150,17 +144,22 @@ public:
 	Msg9S stageUpdates9s()
 	{
 		Msg9S updateStruct;
-		updateStruct.type = PlayerType::T_9S;
+		updateStruct.type = MessageType::T_9S;
 		updateStruct.angle = s9s.rot;
 		updateStruct.distance = s9s.dist;
 		updateStruct.state = s9s.current;
-		updateStruct.push = s9s.current == Event9s::PUSH ? s9s.offset9s : sf::Vector2f(0, 0);
-		updateStruct.hack = s9s.current == Event9s::HACK ? s9s.offset9s : sf::Vector2f(0, 0);
+		updateStruct.push = s9s.current == Event9S::PUSH ? s9s.offset9s : sf::Vector2f(0, 0);
+		updateStruct.hack = s9s.current == Event9S::HACK ? s9s.offset9s : sf::Vector2f(0, 0);
+		updateStruct.ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 		return updateStruct;
 	}
 
 
 	void OnNotify2b(const InputManager& iMan, const Event2B& cmd);
-	void OnNotify9s(const InputManager& iMan, const Event9s& cmd);
-	void Update(float dTime);
+	void OnNotify9s(const InputManager& iMan, const Event9S& cmd);
+	void Update(float dTime, std::vector<Roboto>& bots, const std::vector<InanimateObject>& tiles, MessageType pt = MessageType::T_2B);
+
+	int hack(std::vector<Roboto>& bots);
+	std::vector<int> push(std::vector<Roboto>& bots);
+	void phase();
 };

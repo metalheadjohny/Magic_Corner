@@ -25,29 +25,35 @@ public:
 	~Relay();
 
 	void init();
-
-	//hang until someone connects if server, or until connected if client... decide on arhitecture
 	void establish();
+	void relay2B();
+	void relay9S();
+	void relayVictory();
+	void relayDefeat();
 
-	//wrap all the outbound data into a sf::Packet and send it to the client/server... decide on architecture!!!
-	void relay();
-	
-	//receive inbound data and inject it into the main loop, this should act like another processInput, because it is!
-	//it should call divinate on previous results if no new data was available, which will let it run somewhat believably regardless of network issues 
+
 	bool checkFor2BUpdates(Msg2B& msg) 
 	{
 		sf::Packet p;
 
-		if (tcpi.receive(p)) {
+		if (tcpi.receive9s(p)) {
 			msg.decipher(p);
-			msg.print();	//@TODO stop printing later
+			msg.print();
 			return true;
 		}
 		return false;
 	}
 
-	void incorporate9s() {
+	bool checkFor9SUpdates(Msg9S& msg) 
+	{
+		sf::Packet p;
 
+		if (tcpi.receive2b(p)) {
+			msg.decipher(p);
+			msg.print();
+			return true;
+		}
+		return false;
 	}
 
 	//try to guess the hell is gonna happen in between updates
@@ -59,6 +65,17 @@ public:
 
 	void attachPlayerObserver(Player& pRef) {
 		player = &pRef;
+	}
+
+	void sendMouseDir(sf::Vector2f mouseDir) {
+		
+		sf::Packet p;
+
+		sf::Int32 tempType = static_cast<int>(MessageType::T_2B_MD_ONLY);
+
+		p << tempType << mouseDir.x << mouseDir.y;
+
+		tcpi.send2b(p);
 	}
 };
 

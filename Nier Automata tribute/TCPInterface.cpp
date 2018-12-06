@@ -68,7 +68,6 @@ void TCPInterface::connect(std::string ip, int port)
 bool TCPInterface::send2b(sf::Packet& p)
 {
 	int tries = 1;
-
 	status = cooperator.send(p);
 	while (status != sf::Socket::Done || status == sf::Socket::Status::Partial) {
 
@@ -80,10 +79,7 @@ bool TCPInterface::send2b(sf::Packet& p)
 		}
 	}
 	
-	if (status == sf::Socket::Done)
-		return true;
-	else
-		return false;
+	return status == sf::Socket::Done ? true : false;
 }
 
 
@@ -91,10 +87,10 @@ bool TCPInterface::send2b(sf::Packet& p)
 bool TCPInterface::send9s(sf::Packet& p) 
 {
 	int tries = 1;
-	status = cooperator.send(p);
+	status = socket.send(p);
 	while (status != sf::Socket::Done || status == sf::Socket::Status::Partial) {
 
-		cooperator.send(p);
+		socket.send(p);
 
 		if (++tries == 10) {
 			std::cout << "Giving up on 9s send!" << std::endl;
@@ -102,19 +98,33 @@ bool TCPInterface::send9s(sf::Packet& p)
 		}
 	}
 
-	if (status == sf::Socket::Done)
-		return true;
-	else
-		return false;
+	return status == sf::Socket::Done ? true : false;
 }
 
 
 
-bool TCPInterface::receive(sf::Packet& p) 
+bool TCPInterface::receive2b(sf::Packet& p) 
+{
+	status = cooperator.receive(p);
+	if (status == sf::Socket::Status::NotReady || status == sf::Socket::Status::Error || status == sf::Socket::Status::Disconnected)
+		return false;
+
+	return true;
+}
+
+
+
+bool TCPInterface::receive9s(sf::Packet& p) 
 {
 	status = socket.receive(p);
-	if (status != sf::Socket::Status::NotReady)
-		return true;
+	if (status == sf::Socket::Status::NotReady || status == sf::Socket::Status::Error || status == sf::Socket::Status::Disconnected)
+		return false;
 
-	return false;
+	return true;
+}
+
+
+void TCPInterface::disconnect() {
+	socket.disconnect();
+	cooperator.disconnect();
 }

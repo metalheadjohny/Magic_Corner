@@ -29,7 +29,7 @@ public:
 		//		btnText.getLocalBounds().top + btnText.getLocalBounds().height / 2.0f
 		//	);
 
-		btnRect.setSize(sf::Vector2f(btnText.getLocalBounds().width, btnText.getLocalBounds().height));
+		btnRect.setSize(sf::Vector2f(btnText.getLocalBounds().width, btnText.getLocalBounds().height + 12.f));
 		btnRect.setFillColor(sf::Color::Black);
 		btnRect.setPosition(tlp);
 		btnText.setPosition(sf::Vector2f(btnRect.getGlobalBounds().left, btnRect.getGlobalBounds().top));
@@ -81,6 +81,8 @@ class GUI{
 	sf::Font f;
 	sf::RenderWindow* renderWindow;
 	GameState activeTag = GameState::MAIN_MENU;
+	sf::Texture mmTex;
+	sf::Sprite sprite;
 
 public:
 	GUI(sf::RenderWindow* w);

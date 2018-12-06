@@ -3,6 +3,8 @@
 #include <SFML/Graphics.hpp>
 #include "TileMapper.h"
 #include "Relay.h"
+#include "Roboto.h"
+#include "FSM.h"
 
 
 class Game9S{
@@ -18,6 +20,7 @@ class Game9S{
 	sf::RenderWindow& renderWindow;
 	sf::View view;
 	TileMapper tileMapper;
+	Overlord overlord;
 
 	sf::Event e;
 
@@ -40,14 +43,13 @@ public:
 
 
 
-	void init() {
-
+	void init() 
+	{
+		player.s2b.hp = 100.f;
 		iMan.attachObserver9s(player);
 
-		//set up the level
 		tileMapper.loadFromFile(BASEPATH + "LevelTileMap.txt", "refinery.png");
-
-		//player.posMin = sf::Vector2f(97.f, 97.f) + sf::Vector2f(distanceTo2b, 0);	//set position to 2b's position + offset * angle
+		overlord.fill(tileMapper.enemyPositions);
 
 		view = sf::View(sf::Vector2f(0, 0), sf::Vector2f(ww, wh));
 		renderWindow.setView(view);
@@ -55,54 +57,67 @@ public:
 
 
 
-	void update(float frameTime, sf::RenderWindow& w)
+	void update(float frameTime, sf::RenderWindow& w, GameState& gs)
 	{
-		iMan.processInput(w, e);
+		overlord.update(tileMapper, player.posMin, frameTime);
 
-		player.Update(frameTime);
-		resolveCollisions(frameTime);
-
-		view.setCenter(player.posMin);
-		renderWindow.setView(view);
-
-		//receive updates
+		//receive updates from the network... also I hate switch syntax
 		Msg2B msg;
 		if (relay->checkFor2BUpdates(msg))
 		{
-			receiveUpdates(msg);
+			if (msg.type == MessageType::T_2B) {
+				receiveUpdates(msg);
+			}
+				
+			if (msg.type == MessageType::T_2B_MD_ONLY) {
+				player.mouseDir = sf::Vector2f(msg.dirX, msg.dirY);
+			}
+				
+			if (msg.type == MessageType::T_2B_VICTORY) {
+				gs = GameState::VICTORY;
+				first = true;
+				return;
+			}
+
+			if (msg.type == MessageType::T_2B_DEFEAT) {
+				gs = GameState::DEFEAT;
+				first = true;
+				return;
+			}
+				
 		}
 		else
 		{
 			relay->divinate();	//based on the current state, keep going as is by prediction and interpolate...
 		}
 
-		//send updates
-		late += frameTime;
-		if (late >= UPDATE_INTERVAL) {
+		//receive updates from player input
+		iMan.processInput9S(w, e);
+		
+		player.Update(frameTime, overlord.robotos, tileMapper.level, MessageType::T_9S);
+		resolveCollisions(frameTime);
+
+		view.setCenter(player.posMin);
+		renderWindow.setView(view);
 
 
-			if (player.stateChanged9s) {
-				relay->accumulate9s(player.stageUpdates9s());
-				relay->relay();
-				player.stateChanged9s = false;
-			}
-
-			//reset the interval
-			late -= UPDATE_INTERVAL;
+		if (player.stateChanged9s) {
+			relay->accumulate9s(player.stageUpdates9s());
+			relay->relay9S();
+			player.stateChanged9s = false;
 		}
 
-		
 		draw();
 	}
 
 
 
-	void receiveUpdates(Msg2B msg) {
-
-		//check if the timestamp is more recent than the last one
+	void receiveUpdates(const Msg2B& msg) 
+	{
 		if (lastTimestamp < msg.ms) {
 			lastTimestamp = msg.ms;
 			player.posMin = sf::Vector2f(msg.x, msg.y);
+			player.mouseDir = sf::Vector2f(msg.dirX, msg.dirY);
 			player.s2b.current = static_cast<Event2B>(msg.state);
 		}
 	}
@@ -115,6 +130,8 @@ public:
 		renderWindow.draw(tileMapper.background);
 		for (auto a : tileMapper.level)
 			renderWindow.draw(a.rs);
+
+		overlord.draw(renderWindow);
 
 		//this will change based on network updates
 		player.draw(&renderWindow);

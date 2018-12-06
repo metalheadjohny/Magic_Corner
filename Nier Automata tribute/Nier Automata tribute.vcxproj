@@ -152,6 +152,7 @@
     <ClCompile Include="MatchMaker.cpp" />
     <ClCompile Include="Projectile.cpp" />
     <ClCompile Include="Relay.cpp" />
+    <ClCompile Include="Roboto.cpp" />
     <ClCompile Include="SpriteSheetAnimation.cpp" />
     <ClCompile Include="StateManager.cpp" />
     <ClCompile Include="Synth.cpp" />
@@ -160,6 +161,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animation.h" />
+    <ClInclude Include="DefeatScreen.h" />
     <ClInclude Include="Game2B.h" />
     <ClInclude Include="Game9S.h" />
     <ClInclude Include="GameObject.h" />
@@ -173,11 +175,13 @@
     <ClInclude Include="messageStructs.h" />
     <ClInclude Include="Projectile.h" />
     <ClInclude Include="Relay.h" />
+    <ClInclude Include="Roboto.h" />
     <ClInclude Include="SpriteSheetAnimation.h" />
     <ClInclude Include="StateManager.h" />
     <ClInclude Include="Synth.h" />
     <ClInclude Include="TCPInterface.h" />
     <ClInclude Include="TileMapper.h" />
+    <ClInclude Include="VictoryScreen.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\Assets\LevelTileMap.txt" />

@@ -28,8 +28,9 @@ public:
 	void connect(std::string ip, int port);
 	bool send2b(sf::Packet& p);
 	bool send9s(sf::Packet& p);
-	bool receive(sf::Packet& p);
-
+	bool receive2b(sf::Packet& p);
+	bool receive9s(sf::Packet& p);
+	void disconnect();
 
 
 	void block() {
