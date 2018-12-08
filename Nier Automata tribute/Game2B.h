@@ -22,6 +22,11 @@ class Game2B{
 	TileMapper tileMapper;
 	Overlord overlord;
 
+	Msg9S last9SMessage;
+	std::uint64_t now;
+	sf::Vector2f deltaPos;
+	int STEPS = 20, CURSTEP = 0;
+
 	sf::Event e;
 
 	void resolveCollisions(float frameTime) 
@@ -65,7 +70,7 @@ public:
 
 	void update(float frameTime, sf::RenderWindow& w, GameState& gs) 
 	{
-		overlord.update(tileMapper, player.posMin, frameTime);
+		now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
 		//receive updates from the network
 		Msg9S msg;
@@ -99,6 +104,7 @@ public:
 				relay->sendMouseDir(player.mouseDir);
 		}
 
+		
 		if (overlord.robotos.size() == 0) {
 			gs = GameState::VICTORY;
 			first = true;
@@ -110,6 +116,12 @@ public:
 			first = true;
 			relay->relayDefeat();
 		}
+
+
+		std::vector<int> deltaBodyCount = overlord.update2b(tileMapper, player.posMin, frameTime);
+
+		if (deltaBodyCount.size() > 0)
+			relay->relayBodyCount(deltaBodyCount);
 
 		draw(renderWindow);
 	}

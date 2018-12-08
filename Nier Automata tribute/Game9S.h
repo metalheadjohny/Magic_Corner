@@ -7,6 +7,34 @@
 #include "FSM.h"
 
 
+class SteppyBoi {
+	sf::Vector2f deltaPos;
+	float elapsed = 0.f;
+	float DURATION = 1.f;
+	bool done = false;
+
+public:
+
+	bool isDone() { return done; }
+
+	SteppyBoi(sf::Vector2f dPos) 
+	{
+		deltaPos = dPos;
+	}
+
+	void step(float dTime, sf::Vector2f& posToChange) 
+	{
+		elapsed += dTime;
+		if (elapsed >= DURATION) 
+		{
+			posToChange += (DURATION - (elapsed - dTime)) * deltaPos;
+			done = true;
+			return;
+		}
+		posToChange += dTime * deltaPos;
+	}
+};
+
 class Game9S{
 
 	const float UPDATE_INTERVAL = 0.1f, ww = 1920.f * 0.5f, wh = 1080.f * 0.5f;
@@ -21,6 +49,11 @@ class Game9S{
 	sf::View view;
 	TileMapper tileMapper;
 	Overlord overlord;
+
+	Msg2B last2BMessage;
+	std::uint64_t now;
+
+	std::vector<SteppyBoi> adjustments;
 
 	sf::Event e;
 
@@ -59,14 +92,20 @@ public:
 
 	void update(float frameTime, sf::RenderWindow& w, GameState& gs)
 	{
-		overlord.update(tileMapper, player.posMin, frameTime);
+		now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
-		//receive updates from the network... also I hate switch syntax
+		//receive updates from player input
+		iMan.processInput9S(w, e);
+
+		overlord.update9s(tileMapper, player.posMin, frameTime);
+
+		//receive updates from the network... did I mention I hate switch syntax?
 		Msg2B msg;
-		if (relay->checkFor2BUpdates(msg))
+		if (relay->checkFor2BUpdates(msg))	//this is a one size fits all container... can be done cleaner but it's good enough for a problem of this scope
 		{
 			if (msg.type == MessageType::T_2B) {
 				receiveUpdates(msg);
+				accountForDelay();	//will set mouse dir at first, but it will be overwritten by subsequen T_2B_MD_ONLY messsages as shooting continues
 			}
 				
 			if (msg.type == MessageType::T_2B_MD_ONLY) {
@@ -84,15 +123,14 @@ public:
 				first = true;
 				return;
 			}
+
+			if (msg.type == MessageType::T_2B_DEAD_BOTS) {
+				overlord.synchronizeDestruction(msg.deadBots);
+			}
 				
 		}
-		else
-		{
-			relay->divinate();	//based on the current state, keep going as is by prediction and interpolate...
-		}
-
-		//receive updates from player input
-		iMan.processInput9S(w, e);
+		
+		interpolate(frameTime);
 		
 		player.Update(frameTime, overlord.robotos, tileMapper.level, MessageType::T_9S);
 		resolveCollisions(frameTime);
@@ -100,9 +138,8 @@ public:
 		view.setCenter(player.posMin);
 		renderWindow.setView(view);
 
-
 		if (player.stateChanged9s) {
-			relay->accumulate9s(player.stageUpdates9s());
+			relay->accumulate9s(player.stageUpdates9s(now));
 			relay->relay9S();
 			player.stateChanged9s = false;
 		}
@@ -115,11 +152,57 @@ public:
 	void receiveUpdates(const Msg2B& msg) 
 	{
 		if (lastTimestamp < msg.ms) {
+			last2BMessage = msg;
 			lastTimestamp = msg.ms;
-			player.posMin = sf::Vector2f(msg.x, msg.y);
-			player.mouseDir = sf::Vector2f(msg.dirX, msg.dirY);
-			player.s2b.current = static_cast<Event2B>(msg.state);
 		}
+	}
+
+
+
+	void accountForDelay() {
+
+		std::uint64_t deltaMilis = now - last2BMessage.ms;
+		float deltaSeconds = float(deltaMilis) / 1000.0f;
+		sf::Vector2f deltaPos;
+
+		//account for lag by pushing 2b forward compared to where she was when the message was sent, this will gradually happen
+		if ( (last2BMessage.state & (MOVE_DOWN | MOVE_LEFT | MOVE_RIGHT | MOVE_UP)) != 0 ) {
+
+			float factor = 0;//deltaSeconds * player.s2b.speed;
+		
+			if (last2BMessage.state == MOVE_DOWN)
+				deltaPos = sf::Vector2f(0.f, 1.f) * factor;
+			if (last2BMessage.state == MOVE_LEFT)
+				deltaPos = sf::Vector2f(-1.f, 0.f) * factor;
+			if (last2BMessage.state == MOVE_UP)
+				deltaPos = sf::Vector2f(0.f, -1.f) * factor;
+			if (last2BMessage.state == MOVE_RIGHT)
+				deltaPos = sf::Vector2f(1.f, 0.f) * factor;
+		}
+		
+		//no interpolation required, only errors remaining should be floating point errors, results of which are not visible 
+		//because the movement was fast forwarded when the message to start moving arrived
+		if (last2BMessage.state == CHILL) {
+			//player.posMin = sf::Vector2f(last2BMessage.x, last2BMessage.y);
+			//deltaPos = sf::Vector2f(0, 0);
+			deltaPos = sf::Vector2f(last2BMessage.x, last2BMessage.y) - player.posMin;	//interpolate to the final position instead of snapping	
+		}
+
+		SteppyBoi steppyBoi(deltaPos);
+		adjustments.push_back(steppyBoi);
+
+		player.mouseDir = sf::Vector2f(last2BMessage.dirX, last2BMessage.dirY);
+		player.s2b.current = static_cast<Event2B>(last2BMessage.state);
+	}
+
+
+
+	void interpolate(float frameTime) {
+		
+		for (SteppyBoi& sb : adjustments)
+			sb.step(frameTime, player.posMin);
+
+		adjustments.erase(std::remove_if(adjustments.begin(), adjustments.end(), [](SteppyBoi& sb) { return sb.isDone(); }), adjustments.end());
 	}
 
 
@@ -136,6 +219,7 @@ public:
 		//this will change based on network updates
 		player.draw(&renderWindow);
 	}
+
 
 
 	void attachRelay(Relay& relayRef) {

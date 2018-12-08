@@ -143,9 +143,7 @@ void Player::Update(float dTime, std::vector<Roboto>& bots, const std::vector<In
 int Player::hack(std::vector<Roboto>& bots) {
 	
 	sf::Vector2f hdNormalized = s9s.offset9s / s9s.dist;	//I think this is normalized now
-	sf::Vector2f hackDir = hdNormalized * s9s.HACK_RANGE;
 	
-
 	std::vector<std::pair<int, float>> indicesToHack;
 	for (int i = 0; i < bots.size(); i++) {
 
@@ -154,12 +152,13 @@ int Player::hack(std::vector<Roboto>& bots) {
 
 		if (ptbDistSquared > s9s.HACK_RANGE * s9s.HACK_RANGE)
 			continue;
-
-		playerToBot = playerToBot / sqrt(ptbDistSquared);
-		if (playerToBot.x * hdNormalized.x + playerToBot.y * hdNormalized.y > s9s.HACK_DOT_LMIT)
+		
+		float ptbDist = sqrt(ptbDistSquared);
+		playerToBot = playerToBot / ptbDist;
+		if (playerToBot.x * hdNormalized.x + playerToBot.y * hdNormalized.y < s9s.HACK_DOT_LMIT)
 			continue;
 
-		indicesToHack.push_back(std::make_pair(i, ptbDistSquared));
+		indicesToHack.push_back(std::make_pair(i, ptbDist));
 	}
 
 	if (indicesToHack.empty())
@@ -169,7 +168,7 @@ int Player::hack(std::vector<Roboto>& bots) {
 	float minDist = indicesToHack[0].second;
 
 	for (int i = 1; i < indicesToHack.size(); i++) {
-		if (indicesToHack[i].second <= minDist) {
+		if (indicesToHack[i].second < minDist) {
 			minDist = indicesToHack[i].second;
 			minIndex = indicesToHack[i].first;
 		}
@@ -186,7 +185,6 @@ int Player::hack(std::vector<Roboto>& bots) {
 std::vector<int> Player::push(std::vector<Roboto>& bots)
 {
 	sf::Vector2f hdNormalized = s9s.offset9s / s9s.dist;
-	sf::Vector2f pushDir = hdNormalized * s9s.PUSH_RANGE;
 
 	std::vector<std::pair<int, sf::Vector2f>> indicesToPush;
 	for (int i = 0; i < bots.size(); i++) {
@@ -194,11 +192,11 @@ std::vector<int> Player::push(std::vector<Roboto>& bots)
 		sf::Vector2f playerToBot = bots[i].rs.getPosition() - s9s.sprite.getPosition();
 		float ptbDistSquared = playerToBot.x * playerToBot.x + playerToBot.y * playerToBot.y;
 
-		if (ptbDistSquared > s9s.HACK_RANGE * s9s.HACK_RANGE)
+		if (ptbDistSquared > s9s.PUSH_RANGE * s9s.PUSH_RANGE)
 			continue;
-
+		
 		playerToBot = playerToBot / sqrt(ptbDistSquared);
-		if (playerToBot.x * hdNormalized.x + playerToBot.y * hdNormalized.y > s9s.PUSH_DOT_LIMIT)
+		if (playerToBot.x * hdNormalized.x + playerToBot.y * hdNormalized.y < s9s.PUSH_DOT_LIMIT)
 			continue;
 
 		indicesToPush.push_back(std::make_pair(i, playerToBot));
@@ -206,6 +204,8 @@ std::vector<int> Player::push(std::vector<Roboto>& bots)
 
 	for (auto p : indicesToPush)
 		bots[p.first].yeet(p.second);
+
+	s9s.sincePush = 0.f;
 
 	std::vector<int> result;
 	for (auto itp : indicesToPush)

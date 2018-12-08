@@ -141,7 +141,7 @@ public:
 
 
 
-	Msg9S stageUpdates9s()
+	Msg9S stageUpdates9s(std::uint64_t now)
 	{
 		Msg9S updateStruct;
 		updateStruct.type = MessageType::T_9S;
@@ -150,7 +150,7 @@ public:
 		updateStruct.state = s9s.current;
 		updateStruct.push = s9s.current == Event9S::PUSH ? s9s.offset9s : sf::Vector2f(0, 0);
 		updateStruct.hack = s9s.current == Event9S::HACK ? s9s.offset9s : sf::Vector2f(0, 0);
-		updateStruct.ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		updateStruct.ms = now;
 		return updateStruct;
 	}
 

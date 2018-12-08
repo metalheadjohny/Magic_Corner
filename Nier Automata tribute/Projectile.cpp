@@ -21,7 +21,10 @@ Projectile::~Projectile()
 //abomination.... absolute abomination... but I have no time to implement partitioning
 void Projectile::resolveCollision(std::vector<Roboto>& bots, const std::vector<InanimateObject>& tiles) {
 
-	for (Roboto& r : bots) {
+	for (Roboto& r : bots) 
+	{
+		if (r.isDead()) continue;
+
 		if (rs.getGlobalBounds().intersects(r.rs.getGlobalBounds())) {
 			r.exterminate();
 			dead = true;

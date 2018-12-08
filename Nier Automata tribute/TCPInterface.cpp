@@ -47,16 +47,20 @@ bool TCPInterface::accept()
 
 
 
-void TCPInterface::connect(std::string ip, int port) 
+bool TCPInterface::connect(std::string ip, int port) 
 {
-	status = socket.connect(ip, port);
+	sf::Time timeout = sf::seconds(10);
+	status = socket.connect(ip, port, timeout);
 
-	while (status != sf::Socket::Done) {
-
-		status = socket.connect(SERVER_IP, SERVER_PORT);
-		std::cout << "TFW socket is not done yet. Trying again..." << std::endl;
+	//while (status != sf::Socket::Done) {}
+	//status = socket.connect(SERVER_IP, SERVER_PORT);
+	//std::cout << "TFW socket is not done connecting yet. Trying again..." << std::endl;
+	
+	if (status == sf::Socket::Status::Done) {
+		std::cout << "It's hammertime!" << std::endl;
+		return true;
 	}
-	std::cout << "It's hammertime!" << std::endl;
+	return false;
 }
 
 
@@ -69,11 +73,12 @@ bool TCPInterface::send2b(sf::Packet& p)
 {
 	int tries = 1;
 	status = cooperator.send(p);
-	while (status != sf::Socket::Done || status == sf::Socket::Status::Partial) {
-
+	while (status != sf::Socket::Done || status == sf::Socket::Status::Partial) 
+	{
 		cooperator.send(p);
 
-		if (++tries == 10) {
+		if (++tries == 10) 
+		{
 			std::cout << "Giving up on 2b send!" << std::endl;
 			return false;
 		}

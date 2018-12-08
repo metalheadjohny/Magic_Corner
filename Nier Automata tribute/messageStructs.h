@@ -10,6 +10,8 @@ enum MessageType {
 	T_9S,
 	T_2B_MD_ONLY,
 	T_2B_VICTORY,
+	T_2B_START,
+	T_2B_DEAD_BOTS,
 	T_2B_DEFEAT
 };
 
@@ -22,39 +24,64 @@ struct Msg2B {
 	Event2B state;
 	sf::Int32 int32state;
 	std::uint64_t ms;
+	std::vector<sf::Int32> deadBots;
 
 	float x = 0, y = 0, dirX = 0, dirY = 0;
 
+
+
+	//yes I really hate switch syntax
 	void decipher(sf::Packet& p) {
 		
 		p >> int32type;
 		
 		type = static_cast<MessageType>(int32type);
 
+		if (type == MessageType::T_2B) {
+			p >> int32state >> x >> y >> dirX >> dirY >> ms;
+			state = static_cast<Event2B>(int32state);
+		}
+
 		if (type == MessageType::T_2B_MD_ONLY) {
 			p >> dirX >> dirY;
 			return;
 		}
-		else {
-			p >> int32state >> x >> y >> dirX >> dirY >> ms;
-			state = static_cast<Event2B>(int32state);
+
+		if (type == MessageType::T_2B_DEAD_BOTS) {
+			int vSize = 0;
+			p >> vSize;
+			for (int i = 0; i < vSize; i++) {
+				sf::Int32 curOGI;
+				p >> curOGI;
+				deadBots.push_back(curOGI);
+			}
+			return;
 		}
+
 	}
 
+
+	//not really used except for testing, so it doesn't have all the message types... also switch sucks
 	void print() {
 
-		if (type == MessageType::T_2B_MD_ONLY) {
+		if (type == MessageType::T_2B_MD_ONLY) 
+		{
 			std::cout << "Type: T_2B_MD_ONLY" << std::endl;
 			std::cout << "Dir:  " << dirX << " " << dirY << std::endl;
-		}
-		else {
-			std::cout << "Type:   T_2B " << std::endl;
-			std::cout << "State: " << int32state << std::endl;
-			std::cout << "Pos:   " << x << " " << y << std::endl;
-			std::cout << "Dir:   " << dirX << " " << dirY << std::endl;
-			std::cout << "Stamp: " << ms << std::endl << std::endl;
+			return;
 		}
 
+		if(type == MessageType::T_2B_DEAD_BOTS) 
+		{
+			std::cout << "Dead bots: ";
+
+			for (auto i : deadBots)
+				std::cout << i << ", ";
+
+			std::cout << ";" << std::endl << std::endl;
+
+			return;
+		}
 	}
 
 };
@@ -75,8 +102,6 @@ struct Msg9S {
 	void decipher(sf::Packet& p) {
 
 		bool onlyMousePos = false;
-
-
 
 		p >> int32type >> int32state >> angle >> distance >> push.x >> push.y >> hack.x >> hack.y >> ms;
 		state = static_cast<Event9S>(int32state);

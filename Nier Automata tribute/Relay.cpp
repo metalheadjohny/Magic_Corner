@@ -49,21 +49,19 @@ void Relay::relay9S()
 
 
 
-void Relay::divinate()
-{
-}
-
-
 void Relay::accumulate2b(Msg2B msg)
 {
 	updates2b.push_back(msg);
 }
 
 
+
 void Relay::accumulate9s(Msg9S msg)
 {
 	updates9s.push_back(msg);
 }
+
+
 
 void Relay::relayVictory()
 {
@@ -74,6 +72,8 @@ void Relay::relayVictory()
 	while (!tcpi.send2b(p));
 }
 
+
+
 void Relay::relayDefeat()
 {
 	sf::Packet p;
@@ -81,4 +81,10 @@ void Relay::relayDefeat()
 	p << MessageType::T_2B_DEFEAT;
 
 	while (!tcpi.send2b(p));
+}
+
+
+
+void Relay::divinate() {
+
 }

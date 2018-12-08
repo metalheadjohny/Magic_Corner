@@ -15,7 +15,8 @@
 static const float HOST_LIST_UPDATE_INTERVAL = 3.0f;
 float ww = 1920.f * 0.5f, wh = 1080.f * 0.5f, elapsed = 0.f, elapsedSinceHostUpdate = 0.f, late = 0.f, frameTime = 0.0f;
 bool run = true;
-bool g2bfirst = true, g9sfirst = true;
+bool g2bfirst = true, g9sfirst = true, canStart9s = false;
+std::uint64_t deltaMs = 0;
 
 std::pair<std::string, int> joinIpPort;
 
@@ -89,18 +90,21 @@ int main() {
 
 		if (gameState == GameState::HOSTING) 
 		{
-			//loading screen while waiting for joins
+			//start listening for connections and inform the server about it
 			if (!matchMaker.hosting) {
-				matchMaker.host();
 				relay.tcpi.listen();
+				matchMaker.host();
 			}
 			else {
-				//listen for an incoming connection!
-				if (relay.tcpi.accept()) {					
+				//listen for an incoming connection, trying to accept each frame, once it happens, game is on!
+				//also inform the server that hosting is no longer open to new clients
+				if (relay.tcpi.accept()) {	
 					relay.tcpi.closeListener();
 					matchMaker.unhost();
 					gameState = GameState::PLAYER_2B;
 				}
+
+				//allow the user to stop hosting and inform the server if he does...
 				if (hScreen.update(window)) {
 					gameState = GameState::MAIN_MENU;
 					matchMaker.unhost();
@@ -112,41 +116,39 @@ int main() {
 
 		if (gameState == GameState::JOINING) 
 		{
+			//each HOST_LIST_UPDATE_INTERVAL, ask the server for a new list of hosts, and update the local list with it
 			elapsedSinceHostUpdate += frameTime;
 			if (elapsedSinceHostUpdate > HOST_LIST_UPDATE_INTERVAL) {
 				elapsedSinceHostUpdate -= HOST_LIST_UPDATE_INTERVAL;
 				jScreen.updateList(matchMaker.listGames());
 			}
 
+			//listen for a click on the joining window, and update the IP/port pair from the list
 			joinIpPort = std::make_pair("-1", -1);
+
+			//however if it returns true it means the user wants to stop looking for a game, by clicking escape or close...
 			if (jScreen.update(window, joinIpPort))
 				gameState = GameState::MAIN_MENU;
 
+			//draw the list each frame
 			jScreen.drawList(window);
 
-			//when accepted by the sever
+			//try to connect to the server, when accept comes through game is on! it's set to blocking as this should be instantaneous...
+			//however in a real scenario someone else might connect first before the list updates (within HOST_LIST_UPDATE_INTERVAL)
+			//And this could hang until timeout (set to 10 seconds). It should be non blocking in that case but for this scenario this is fine
 			if (joinIpPort.second != -1) {
 				relay.tcpi.block();
-				relay.tcpi.connect(joinIpPort.first, joinIpPort.second);
+				if (relay.tcpi.connect(joinIpPort.first, joinIpPort.second))
+					gameState = GameState::PLAYER_9S;
 				relay.tcpi.unblock();
-				gameState = GameState::PLAYER_9S;
 			}
 			
 		}
 
 
 
-		if (gameState == GameState::OBSERVING) 
-		{
-			//ignore for now... implement if there is enough time...
-			//receive updates from player one and render everything
-		}
-
-
-
 		if (gameState == GameState::PLAYER_2B)
 		{
-
 			if (g2bfirst) {
 				g2bPtr = new Game2B(window);
 				g2bPtr->init();
@@ -154,6 +156,7 @@ int main() {
 				g2bPtr->attachRelay(relay);
 				g2bfirst = false;
 				g2bPtr->first = true;
+				relay.sendStartingMessage();
 			}
 
 			g2bPtr->update(frameTime, window, gameState);
@@ -163,8 +166,8 @@ int main() {
 
 		if (gameState == GameState::PLAYER_9S)
 		{
-
-			if (g9sfirst) {
+			if (g9sfirst) 
+			{
 				g9sPtr = new Game9S(window);
 				g9sPtr->init();
 				relay.attachPlayerObserver(g9sPtr->player);
@@ -173,6 +176,11 @@ int main() {
 				g9sPtr->first = true;
 			}
 
+			if (!canStart9s) {
+				canStart9s = relay.receiveStartingMessage(deltaMs);
+				continue;
+			}
+			
 			g9sPtr->update(frameTime, window, gameState);
 		}
 
@@ -219,6 +227,14 @@ int main() {
 
 			if (dScreen.update(window))
 				gameState = GameState::MAIN_MENU;
+		}
+
+
+
+		if (gameState == GameState::OBSERVING)
+		{
+			//ignore for now... implement if there is enough time...
+			//receive updates from player one and render everything
 		}
 
 		window.display();

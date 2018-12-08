@@ -25,7 +25,7 @@ public:
 
 		t.setFont(f);
 		t.setString(message);
-		t.setCharacterSize(100);
+		t.setCharacterSize(96);
 		t.setFillColor(sf::Color(160, 0, 0, 255));
 		t.setStyle(sf::Text::Bold);
 		t.setOrigin(t.getLocalBounds().width * 0.5f, t.getLocalBounds().height * 0.5f);
