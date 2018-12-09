@@ -18,7 +18,7 @@ void InputManager::notifyObservers9s(const InputManager& inputManager, const Eve
 
 
 
-void InputManager::processInput2B(sf::RenderWindow& window, sf::Event& e) 
+bool InputManager::processInput2B(sf::RenderWindow& window, sf::Event& e)
 {
 	sf::Vector2f mouse_world = window.mapPixelToCoords(sf::Mouse::getPosition(window));
 	sf::Vector2f mousePosFloat = sf::Vector2f((float)mouse_world.x, (float)mouse_world.y);
@@ -31,57 +31,59 @@ void InputManager::processInput2B(sf::RenderWindow& window, sf::Event& e)
 		switch (e.type) {
 
 		case sf::Event::Closed:
-			window.close();
+			return false;
 			break;
 
 		case sf::Event::KeyPressed:
 			if (e.key.code == sf::Keyboard::Escape)
-				window.close();
+				return false;
 			break;
 		}
 	}
 
 	if (!window.hasFocus())
-		return;
+		return true;
 
 	for(auto keyCmd : keyCmdMap2b) {
 		if(sf::Keyboard::isKeyPressed(keyCmd.second)) {
 			notifyObservers2b(*this, keyCmd.first);
-			return;
+			return true;
 		}
 	}
 
 	notifyObservers2b(*this, CHILL);
+	return true;
 }
 
 
-void InputManager::processInput9S(sf::RenderWindow& window, sf::Event& e)
+bool InputManager::processInput9S(sf::RenderWindow& window, sf::Event& e)
 {
 
 	while (window.pollEvent(e)) {
 		switch (e.type) {
 
 		case sf::Event::Closed:
-			window.close();
+			return false;
 			break;
 
 		case sf::Event::KeyPressed:
 			if (e.key.code == sf::Keyboard::Escape)
-				window.close();
+				return false;
 			break;
 		}
 	}
 
 
 	if (!window.hasFocus())
-		return;
+		return true;
 
 	for (auto keyCmd : keyCmdMap9s) {
 		if (sf::Keyboard::isKeyPressed(keyCmd.second)) {
 			notifyObservers9s(*this, keyCmd.first);
-			return;
+			return true;
 		}
 	}
 
 	notifyObservers9s(*this, CHILL9S);
+	return true;
 }

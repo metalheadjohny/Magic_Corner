@@ -4,12 +4,16 @@
 #include <string>
 #include <vector>
 
+class Relay;
+
 class TCPInterface {
 
 	sf::TcpListener listener;
 	sf::TcpSocket socket;
 	sf::TcpSocket cooperator;
 	sf::Socket::Status status;
+
+	Relay* relay;
 
 	std::vector<sf::TcpSocket> observers;
 
@@ -21,7 +25,7 @@ public:
 	TCPInterface();
 	~TCPInterface();
 
-	void init(std::string serverIp, int serverPort);
+	void init(std::string& serverIp, int serverPort, Relay& rel);
 	void listen();
 	bool accept();
 	void closeListener();
@@ -51,6 +55,19 @@ public:
 
 	sf::TcpSocket& getRefToClientSocket() { 
 		return socket; 
+	}
+	
+
+
+	bool checkIfDisconnected() {
+
+		bool dcd = true;
+		for (int i = 0; i < 10; i++) {
+			if (!(socket.getRemoteAddress() == sf::IpAddress::None && cooperator.getRemoteAddress() == sf::IpAddress::None))
+				dcd = false;
+		}
+	
+		return dcd;
 	}
 };
 

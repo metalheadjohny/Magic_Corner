@@ -1,7 +1,8 @@
 #pragma once
+#include <SFML/Graphics.hpp>
 #include "GameObject.h"
 #include "TileMapper.h"
-#include <SFML/Graphics.hpp>
+#include "messageStructs.h"
 #include <vector>
 
 
@@ -99,6 +100,11 @@ public:
 		yeeted = true;
 		yeetDir = yeetDirection;
 		sinceYeet = 0.f;
+	}
+
+
+	BotUpdateData getCurrentData() {
+		return BotUpdateData(rs.getPosition(), OG_INDEX);
 	}
 };
 
@@ -253,5 +259,20 @@ public:
 				serverBodyCount.push_back(i);
 		}
 		
+	}
+
+
+
+	void synchronizeAction(std::vector<BotUpdateData> buds, std::uint64_t delta, const TileMapper& tm, const sf::Vector2f playerPos) {
+
+		for (Roboto& r : robotos) {
+			for (auto bud : buds) {
+				if (r.OG_INDEX == bud.OG_INDEX) {
+					r.rs.setPosition(bud.pos);
+					r.update(tm, playerPos, delta);
+				}
+			}
+		}
+
 	}
 };

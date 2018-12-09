@@ -1,5 +1,6 @@
 #include "TCPInterface.h"
 #include <iostream>
+#include "Relay.h"
 
 
 
@@ -13,10 +14,11 @@ TCPInterface::~TCPInterface() {
 
 
 
-void TCPInterface::init(std::string serverIp, int serverPort) 
+void TCPInterface::init(std::string& serverIp, int serverPort, Relay& rel) 
 {
 	SERVER_IP = serverIp;
 	SERVER_PORT = serverPort;	
+	relay = &rel;
 }
 
 
@@ -83,6 +85,11 @@ bool TCPInterface::send2b(sf::Packet& p)
 			return false;
 		}
 	}
+
+	if (status == sf::Socket::Disconnected)
+		relay->notifyDisconnect();
+	else
+		relay->allIsWell();
 	
 	return status == sf::Socket::Done ? true : false;
 }
@@ -103,6 +110,9 @@ bool TCPInterface::send9s(sf::Packet& p)
 		}
 	}
 
+	if (status == sf::Socket::Disconnected)
+		relay->notifyDisconnect();
+
 	return status == sf::Socket::Done ? true : false;
 }
 
@@ -111,8 +121,14 @@ bool TCPInterface::send9s(sf::Packet& p)
 bool TCPInterface::receive2b(sf::Packet& p) 
 {
 	status = cooperator.receive(p);
-	if (status == sf::Socket::Status::NotReady || status == sf::Socket::Status::Error || status == sf::Socket::Status::Disconnected)
+	if (status == sf::Socket::Status::NotReady || status == sf::Socket::Status::Error)
 		return false;
+
+	if (status == sf::Socket::Disconnected) {
+		relay->notifyDisconnect();
+		return false;
+	}
+		
 
 	return true;
 }
@@ -125,6 +141,11 @@ bool TCPInterface::receive9s(sf::Packet& p)
 	if (status == sf::Socket::Status::NotReady || status == sf::Socket::Status::Error || status == sf::Socket::Status::Disconnected)
 		return false;
 
+	if (status == sf::Socket::Disconnected) {
+		relay->notifyDisconnect();
+		return false;
+	}
+
 	return true;
 }
 
@@ -132,4 +153,5 @@ bool TCPInterface::receive9s(sf::Packet& p)
 void TCPInterface::disconnect() {
 	socket.disconnect();
 	cooperator.disconnect();
+	relay->notifyDisconnect();
 }

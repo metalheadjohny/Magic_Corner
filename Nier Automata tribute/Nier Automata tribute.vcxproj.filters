@@ -137,6 +137,9 @@
     <ClInclude Include="DefeatScreen.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SpectateScreen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\Assets\LevelTileMap.txt" />

@@ -47,7 +47,7 @@ void GUI::init() {
 	specText.setStyle(sf::Text::Bold);
 
 	quitText.setFont(f);
-	quitText.setString("Vacate the premises");
+	quitText.setString("Withdraw");
 	quitText.setCharacterSize(36);
 	quitText.setFillColor(sf::Color(180, 0, 30, 255));
 	quitText.setStyle(sf::Text::Bold);
@@ -63,6 +63,7 @@ void GUI::init() {
 	ROOT.children.push_back(host);
 	ROOT.children.push_back(join);
 	ROOT.children.push_back(spec);
+	ROOT.children.push_back(quit);
 }
 
 

@@ -1,5 +1,7 @@
 #include "Relay.h"
 #include "GameObject.h"
+#include "Roboto.h"
+#include "messageStructs.h"
 
 Relay::Relay()
 {
@@ -13,7 +15,7 @@ Relay::~Relay()
 
 void Relay::init() {
 	ipAddr = sf::IpAddress::getLocalAddress().toString();
-	tcpi.init(ipAddr, 36963);
+	tcpi.init(ipAddr, 36963, *this);
 }
 
 
@@ -87,4 +89,22 @@ void Relay::relayDefeat()
 
 void Relay::divinate() {
 
+}
+
+
+
+void Relay::updateLiveBots(const std::vector<Roboto>& bots, std::uint64_t now) {
+
+	sf::Int32 botCount = bots.size();
+	sf::Packet p;
+	p << static_cast<sf::Int32>(MessageType::T_2B_ACTIVE_BOTS);
+	p << now;
+	p << botCount;
+
+	for (auto r : bots) {
+		BotUpdateData bud = r.getCurrentData();
+		p << bud.OG_INDEX << bud.pos.x << bud.pos.y;
+	}
+
+	tcpi.send2b(p);
 }

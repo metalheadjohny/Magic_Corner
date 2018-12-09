@@ -4,11 +4,11 @@
 #include <vector>
 
 class Player;
+class Roboto;
 
-//All networking should be here from the view of main! And only here! Facade pattern!
+//Handles all networking
 class Relay{
 
-	//@TODO: make this into an object with timestamps and more than just position...
 	std::string ipAddr = "";
 
 	Player* player;
@@ -16,6 +16,8 @@ class Relay{
 public:
 
 	TCPInterface tcpi;
+
+	bool disconnected = false;
 
 	std::vector<Msg2B> updates2b;
 	std::vector<Msg9S> updates9s;
@@ -31,7 +33,11 @@ public:
 	void relay9S();
 	void relayVictory();
 	void relayDefeat();
+	void accumulate2b(Msg2B msg);
+	void accumulate9s(Msg9S msg);
+	void updateLiveBots(const std::vector<Roboto>& bots, std::uint64_t now);
 	void divinate(); //not used for now
+
 
 
 	bool checkFor2BUpdates(Msg2B& msg) 
@@ -46,24 +52,26 @@ public:
 		return false;
 	}
 
+
+
 	bool checkFor9SUpdates(Msg9S& msg) 
 	{
 		sf::Packet p;
 
 		if (tcpi.receive2b(p)) {
 			msg.decipher(p);
-			msg.print();
 			return true;
 		}
 		return false;
 	}
 
-	void accumulate2b(Msg2B msg);
-	void accumulate9s(Msg9S msg);
+
 
 	void attachPlayerObserver(Player& pRef) {
 		player = &pRef;
 	}
+
+
 
 	void sendMouseDir(sf::Vector2f mouseDir) {
 		
@@ -102,7 +110,7 @@ public:
 	}
 
 
-	///not used, for now...
+
 	void sendStartingMessage() {
 
 		sf::Packet p;
@@ -111,6 +119,8 @@ public:
 
 		tcpi.send2b(p);
 	}
+
+
 
 	bool receiveStartingMessage(std::uint64_t& delta) {
 
@@ -133,5 +143,50 @@ public:
 			}
 		}
 		return false;
+	}
+
+
+
+	void notifyDisconnect() {
+		disconnected = true;
+	}
+
+
+
+	void allIsWell() {
+		disconnected = false;
+	}
+
+
+	//double check, as sometimes the status of receive/send can be disconnected even if it's not
+	//even this is not completely reliable but used to indicate potential network issues for the user
+	bool isDisconnected() {
+		if (disconnected) {
+			bool result = tcpi.checkIfDisconnected();
+
+			if (result)
+				return true;
+			else {
+				allIsWell();
+				return false;
+			}
+		}	
+		return false;
+	}
+
+
+	void relayPulse2B() {
+
+		sf::Packet p;
+		p << static_cast<sf::Int32>(MessageType::PULSE);
+		tcpi.send2b(p);
+	}
+
+
+	void relayPulse9S() {
+
+		sf::Packet p;
+		p << static_cast<sf::Int32>(MessageType::PULSE);
+		tcpi.send9s(p);
 	}
 };

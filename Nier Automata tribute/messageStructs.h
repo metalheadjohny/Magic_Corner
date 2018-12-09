@@ -12,7 +12,20 @@ enum MessageType {
 	T_2B_VICTORY,
 	T_2B_START,
 	T_2B_DEAD_BOTS,
-	T_2B_DEFEAT
+	T_2B_ACTIVE_BOTS,
+	T_2B_DEFEAT,
+	PULSE
+};
+
+
+struct BotUpdateData {
+	sf::Vector2f pos;
+	sf::Int32 OG_INDEX;
+
+	BotUpdateData(sf::Vector2f position, sf::Int32 originalIndex) {
+		pos = position;
+		OG_INDEX = originalIndex;
+	}
 };
 
 
@@ -25,6 +38,7 @@ struct Msg2B {
 	sf::Int32 int32state;
 	std::uint64_t ms;
 	std::vector<sf::Int32> deadBots;
+	std::vector<BotUpdateData> buds;
 
 	float x = 0, y = 0, dirX = 0, dirY = 0;
 
@@ -58,6 +72,23 @@ struct Msg2B {
 			return;
 		}
 
+		if (type == MessageType::T_2B_ACTIVE_BOTS) {
+
+			sf::Int32 botCount;
+
+			p >> ms;
+			p >> botCount;
+
+			for (int i = 0; i < botCount; i++) 
+			{
+				sf::Int32 ogIndex;
+				float bX, bY;
+				p >>ogIndex >> bX >> bY;
+
+				buds.push_back(BotUpdateData(sf::Vector2f(bX, bY), ogIndex));
+			}
+
+		}
 	}
 
 
@@ -101,10 +132,14 @@ struct Msg9S {
 
 	void decipher(sf::Packet& p) {
 
-		bool onlyMousePos = false;
+		p >> int32type;
+		type = static_cast<MessageType>(int32type);
 
-		p >> int32type >> int32state >> angle >> distance >> push.x >> push.y >> hack.x >> hack.y >> ms;
-		state = static_cast<Event9S>(int32state);
+		if (type == MessageType::T_9S) {
+			p >> int32state >> angle >> distance >> push.x >> push.y >> hack.x >> hack.y >> ms;
+			state = static_cast<Event9S>(int32state);
+			print();
+		}
 	}
 
 	void print() {

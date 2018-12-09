@@ -87,7 +87,7 @@ public:
 	
 	void notifyObservers9s(const InputManager& inputManager, const Event9S& event);
 	
-	void processInput2B(sf::RenderWindow& window, sf::Event& e);
-	void processInput9S(sf::RenderWindow& window, sf::Event& e);
+	bool processInput2B(sf::RenderWindow& window, sf::Event& e);
+	bool processInput9S(sf::RenderWindow& window, sf::Event& e);
 };
 

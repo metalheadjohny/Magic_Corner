@@ -37,7 +37,8 @@ public:
 
 class Game9S{
 
-	const float UPDATE_INTERVAL = 0.1f, ww = 1920.f * 0.5f, wh = 1080.f * 0.5f;
+	const float KEEPALIVE_INTERVAL = 3.33f, ww = 1920.f * 0.5f, wh = 1080.f * 0.5f;
+	float sinceKeepalive = 0.f, sinceRemoteKeepalive = 0.f;
 	const std::string BASEPATH = "../Assets/";
 	float late = 0.f;
 
@@ -94,8 +95,14 @@ public:
 	{
 		now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
+		if (relay->isDisconnected())
+			std::cout << "Interruption detected during synchronization with 2B. Connection might be compromised." << std::endl;
+			
 		//receive updates from player input
-		iMan.processInput9S(w, e);
+		if (!iMan.processInput9S(w, e)) {
+			gs = GameState::DEFEAT;
+			return;
+		}
 
 		overlord.update9s(tileMapper, player.posMin, frameTime);
 
@@ -111,7 +118,15 @@ public:
 			if (msg.type == MessageType::T_2B_MD_ONLY) {
 				player.mouseDir = sf::Vector2f(msg.dirX, msg.dirY);
 			}
-				
+
+			if (msg.type == MessageType::T_2B_DEAD_BOTS) {
+				overlord.synchronizeDestruction(msg.deadBots);
+			}
+
+			if(msg.type == MessageType::T_2B_ACTIVE_BOTS) {
+				overlord.synchronizeAction(msg.buds, float(now - msg.ms) / 1000.f, tileMapper, player.posMin);
+			}
+
 			if (msg.type == MessageType::T_2B_VICTORY) {
 				gs = GameState::VICTORY;
 				first = true;
@@ -122,12 +137,11 @@ public:
 				gs = GameState::DEFEAT;
 				first = true;
 				return;
-			}
+			}	
 
-			if (msg.type == MessageType::T_2B_DEAD_BOTS) {
-				overlord.synchronizeDestruction(msg.deadBots);
+			if (msg.type == MessageType::PULSE) {
+				sinceRemoteKeepalive = 0.f;
 			}
-				
 		}
 		
 		interpolate(frameTime);
@@ -138,13 +152,26 @@ public:
 		view.setCenter(player.posMin);
 		renderWindow.setView(view);
 
+		draw();
+
 		if (player.stateChanged9s) {
 			relay->accumulate9s(player.stageUpdates9s(now));
 			relay->relay9S();
 			player.stateChanged9s = false;
 		}
 
-		draw();
+		sinceKeepalive += frameTime;
+		if (sinceKeepalive >= KEEPALIVE_INTERVAL) {
+			relay->relayPulse9S();
+			std::cout << "PULSE!" << std::endl;
+			sinceKeepalive -= KEEPALIVE_INTERVAL;
+		}
+
+		sinceRemoteKeepalive += frameTime;
+		if (sinceRemoteKeepalive >= KEEPALIVE_INTERVAL * 3.f) {
+			std::cout << "You have disconnected from 2B! Sadly this means game over." << std::endl;
+			gs = GameState::DEFEAT;
+		}
 	}
 
 
@@ -180,11 +207,8 @@ public:
 				deltaPos = sf::Vector2f(1.f, 0.f) * factor;
 		}
 		
-		//no interpolation required, only errors remaining should be floating point errors, results of which are not visible 
-		//because the movement was fast forwarded when the message to start moving arrived
+		//adds deltaPos to the interpolation stack to synchronize after movement is over
 		if (last2BMessage.state == CHILL) {
-			//player.posMin = sf::Vector2f(last2BMessage.x, last2BMessage.y);
-			//deltaPos = sf::Vector2f(0, 0);
 			deltaPos = sf::Vector2f(last2BMessage.x, last2BMessage.y) - player.posMin;	//interpolate to the final position instead of snapping	
 		}
 
@@ -193,6 +217,17 @@ public:
 
 		player.mouseDir = sf::Vector2f(last2BMessage.dirX, last2BMessage.dirY);
 		player.s2b.current = static_cast<Event2B>(last2BMessage.state);
+	}
+
+
+
+	void initialRobotSync(std::uint64_t serverTime) 
+	{
+		std::uint64_t delta = now - serverTime;
+		float deltaFloat = float(delta) / 1000.f;
+		first = false;
+
+		overlord.update9s(tileMapper, player.posMin, deltaFloat);
 	}
 
 

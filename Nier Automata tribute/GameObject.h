@@ -83,7 +83,7 @@ public:
 	Player(float maxHP, float maxSpeed){
 		
 		mousePos = sf::Vector2f(0, 0);
-		posMin = sf::Vector2f(97.f, 97.f);
+		posMin = sf::Vector2f(200.f, 200.f);
 
 		//load 2b
 		loadSSA(BASEPATH + "2B exivus sprites\\limit_break.png", sf::Vector2u(3, 17), 5.f, "lb");

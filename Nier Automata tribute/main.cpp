@@ -6,14 +6,15 @@
 #include "JoiningScreen.h"
 #include "DefeatScreen.h"
 #include "VictoryScreen.h"
+#include "SpectateScreen.h"
 #include "Game2B.h"
 #include "Game9s.h"
 #include <string>
 
 #include "InputManager.h"
 
-static const float HOST_LIST_UPDATE_INTERVAL = 3.0f;
-float ww = 1920.f * 0.5f, wh = 1080.f * 0.5f, elapsed = 0.f, elapsedSinceHostUpdate = 0.f, late = 0.f, frameTime = 0.0f;
+static const float HOST_LIST_UPDATE_INTERVAL = 10.f;
+float ww = 1920.f * 0.5f, wh = 1080.f * 0.5f, elapsed = 0.f, elapsedSinceHostUpdate = 10.f, late = 0.f, frameTime = 0.0f;
 bool run = true;
 bool g2bfirst = true, g9sfirst = true, canStart9s = false;
 std::uint64_t deltaMs = 0;
@@ -25,10 +26,11 @@ Relay relay;
 
 GameState gameState = GameState::MAIN_MENU;
 
-HostingScreen hScreen;
-JoiningScreen jScreen;
-VictoryScreen vScreen;
-DefeatScreen  dScreen;
+HostingScreen  hScreen;
+JoiningScreen  jScreen;
+VictoryScreen  vScreen;
+DefeatScreen   dScreen;
+SpectateScreen sScreen;
 
 InputManager iMan;
 
@@ -54,22 +56,25 @@ int main() {
 	sf::Event e;
 	
 	//prepare loading screens
-	sf::Texture texHosting, texJoining, texVictory, texDefeat;
+	sf::Texture texHosting, texJoining, texVictory, texDefeat, texSpectating;
 	texHosting.loadFromFile("../Assets/loading_2b.jpg");
 	texJoining.loadFromFile("../Assets/loading_9s.jpg");
 	texVictory.loadFromFile("../Assets/Victory.jpg");
 	texDefeat.loadFromFile("../Assets/Defeat.jpg");
+	texSpectating.loadFromFile("../Assets/emil2.jpg");
 
-	sf::Sprite picHosting, picJoining, picVictory, picDefeat;
+	sf::Sprite picHosting, picJoining, picVictory, picDefeat, picSpectating;
 	picHosting.setTexture(texHosting);
 	picJoining.setTexture(texJoining);
 	picVictory.setTexture(texVictory);
 	picDefeat.setTexture(texDefeat);
+	picSpectating.setTexture(texSpectating);
 
 	hScreen.setUp(picHosting, window, "Waiting for 9s...");
 	jScreen.setUp(picJoining, window, "Searching for 2b...");
 	vScreen.setUp(picVictory, window, "[FOR THE GLORY OF MANKIND]");
 	dScreen.setUp(picDefeat,  window, "2B... It was an honor to fight with you. Truly.");
+	sScreen.setUp(picSpectating, window);
 
 	//jam frame updates in here
 	while (window.isOpen() && run) {
@@ -155,8 +160,10 @@ int main() {
 				relay.attachPlayerObserver(g2bPtr->player);
 				g2bPtr->attachRelay(relay);
 				g2bfirst = false;
-				g2bPtr->first = true;
+				//relay.tcpi.block();
 				relay.sendStartingMessage();
+				//relay.tcpi.unblock();
+				continue;
 			}
 
 			g2bPtr->update(frameTime, window, gameState);
@@ -178,8 +185,11 @@ int main() {
 
 			if (!canStart9s) {
 				canStart9s = relay.receiveStartingMessage(deltaMs);
+				if (canStart9s)
+					g9sPtr->initialRobotSync(deltaMs);
 				continue;
 			}
+			
 			
 			g9sPtr->update(frameTime, window, gameState);
 		}
@@ -233,8 +243,8 @@ int main() {
 
 		if (gameState == GameState::OBSERVING)
 		{
-			//ignore for now... implement if there is enough time...
-			//receive updates from player one and render everything
+			if(sScreen.update(window))
+				gameState = GameState::MAIN_MENU;
 		}
 
 		window.display();

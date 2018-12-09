@@ -9,7 +9,8 @@
 
 class Game2B{
 
-	const float UPDATE_INTERVAL = 0.1f, ww = 1920.f * 0.5f, wh = 1080.f * 0.5f;
+	const float BOT_UPDATE_INTERVAL = 1.f, ww = 1920.f * 0.5f, wh = 1080.f * 0.5f, KEEPALIVE_INTERVAL = 3.33f;
+	float sinceBotUpdate = 0.f, sinceKeepalive = 0.f, sinceRemoteKeepalive = 0.f;
 	const std::string BASEPATH = "../Assets/";
 	float late = 0.f;
 	
@@ -49,7 +50,6 @@ class Game2B{
 public:
 
 	Player player;
-	bool first = true;
 
 	Game2B(sf::RenderWindow& w);
 	~Game2B();
@@ -70,21 +70,11 @@ public:
 
 	void update(float frameTime, sf::RenderWindow& w, GameState& gs) 
 	{
-		now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-
-		//receive updates from the network
-		Msg9S msg;
-		if (relay->checkFor9SUpdates(msg))
-		{
-			receiveUpdates(msg);
+		//local updates
+		if (!iMan.processInput2B(w, e)) {
+			gs = GameState::DEFEAT;
+			return;
 		}
-		else
-		{
-			relay->divinate();	//based on the current state, keep going as is by prediction and interpolate...
-		}
-
-		//receive updates from player input
-		iMan.processInput2B(w, e);
 
 		player.Update(frameTime, overlord.robotos, tileMapper.level);
 		resolveCollisions(frameTime);
@@ -92,7 +82,22 @@ public:
 		view.setCenter(player.posMin);
 		renderWindow.setView(view);
 
-		if (player.stateChanged2b) 
+		if (overlord.robotos.size() == 0) {
+			gs = GameState::VICTORY;
+			relay->relayVictory();
+		}
+
+		if (player.s2b.hp <= 0) {
+			gs = GameState::DEFEAT;
+			relay->relayDefeat();
+		}
+
+		draw(renderWindow);
+
+		//net code
+		now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+
+		if (player.stateChanged2b)
 		{
 			relay->accumulate2b(player.stageUpdates2b());
 			relay->relay2B();
@@ -104,32 +109,50 @@ public:
 				relay->sendMouseDir(player.mouseDir);
 		}
 
-		
-		if (overlord.robotos.size() == 0) {
-			gs = GameState::VICTORY;
-			first = true;
-			relay->relayVictory();
-		}
 
-		if (player.s2b.hp <= 0) {
-			gs = GameState::DEFEAT;
-			first = true;
-			relay->relayDefeat();
-		}
+		//receive updates from the network
+		Msg9S msg;
+		if (relay->checkFor9SUpdates(msg))
+			receiveUpdates(msg);
 
+		//this is a guess, keepalive method is reliable
+		if (relay->isDisconnected())
+			std::cout << "Interruption detected during synchronization with 9S. Connection might be compromised." << std::endl;
 
 		std::vector<int> deltaBodyCount = overlord.update2b(tileMapper, player.posMin, frameTime);
 
 		if (deltaBodyCount.size() > 0)
 			relay->relayBodyCount(deltaBodyCount);
 
-		draw(renderWindow);
+		sinceBotUpdate += frameTime;
+		if (sinceBotUpdate >= BOT_UPDATE_INTERVAL) {
+			relay->updateLiveBots(overlord.robotos, now);
+			sinceBotUpdate -= BOT_UPDATE_INTERVAL;
+		}
+		
+		sinceKeepalive += frameTime;
+		if (sinceKeepalive >= KEEPALIVE_INTERVAL) {
+			relay->relayPulse2B();
+			sinceKeepalive -= KEEPALIVE_INTERVAL;
+		}
+
+		sinceRemoteKeepalive += frameTime;
+		if (sinceRemoteKeepalive >= KEEPALIVE_INTERVAL * 3.f) {
+			std::cout << "You have disconnected from 9S! Sadly this means game over." << std::endl;
+			gs = GameState::DEFEAT;
+		}
 	}
 
 
 
 	void receiveUpdates(const Msg9S& msg) 
 	{
+
+		if (msg.type == MessageType::PULSE) {
+			sinceRemoteKeepalive = 0.f;
+			return;
+		}
+
 		if (lastTimestamp < msg.ms) {
 			lastTimestamp = msg.ms;
 			player.s9s.rot = msg.angle;
