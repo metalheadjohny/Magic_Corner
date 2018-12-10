@@ -14,6 +14,7 @@ enum MessageType {
 	T_2B_DEAD_BOTS,
 	T_2B_ACTIVE_BOTS,
 	T_2B_DEFEAT,
+	DISCONNECT,
 	PULSE
 };
 
@@ -140,6 +141,7 @@ struct Msg9S {
 			state = static_cast<Event9S>(int32state);
 			print();
 		}
+
 	}
 
 	void print() {

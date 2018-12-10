@@ -147,20 +147,23 @@ public:
 
 
 
-	void notifyDisconnect() {
+	void notifyDisconnect() 
+	{
 		disconnected = true;
 	}
 
 
 
-	void allIsWell() {
+	void allIsWell() 
+	{
 		disconnected = false;
 	}
 
 
 	//double check, as sometimes the status of receive/send can be disconnected even if it's not
 	//even this is not completely reliable but used to indicate potential network issues for the user
-	bool isDisconnected() {
+	bool isDisconnected() 
+	{
 		if (disconnected) {
 			bool result = tcpi.checkIfDisconnected();
 
@@ -175,7 +178,8 @@ public:
 	}
 
 
-	void relayPulse2B() {
+	void relayPulse2B() 
+	{
 
 		sf::Packet p;
 		p << static_cast<sf::Int32>(MessageType::PULSE);
@@ -183,10 +187,30 @@ public:
 	}
 
 
-	void relayPulse9S() {
-
+	void relayPulse9S() 
+	{
 		sf::Packet p;
 		p << static_cast<sf::Int32>(MessageType::PULSE);
 		tcpi.send9s(p);
+	}
+
+
+
+	void disconnectFrom2B() 
+	{
+		sf::Packet p;
+		p << static_cast<sf::Int32>(MessageType::DISCONNECT);
+		tcpi.send9s(p);
+		tcpi.disconnect();
+	}
+
+
+
+	void disconnectFrom9S() 
+	{
+		sf::Packet p;
+		p << static_cast<sf::Int32>(MessageType::DISCONNECT);
+		tcpi.send2b(p);
+		tcpi.disconnect();
 	}
 };

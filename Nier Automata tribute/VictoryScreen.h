@@ -25,14 +25,31 @@ public:
 
 		t.setFont(f);
 		t.setString(message);
-		t.setCharacterSize(96);
+		t.setCharacterSize(86);
 		t.setFillColor(sf::Color(160, 0, 0, 255));
 		t.setStyle(sf::Text::Bold);
 		t.setOrigin(t.getLocalBounds().width * 0.5f, t.getLocalBounds().height * 0.5f);
 		t.setPosition(w.getSize().x * 0.5f, w.getSize().y * 0.5f);
 
 		sprite = loadingSprite;
-		//sprite.setScale(w.getSize().x / sprite.getLocalBounds().width, w.getSize().y / sprite.getLocalBounds().height);
+
+
+		//resize and keep ar...
+		/*
+		float AR = sprite.getLocalBounds().width / sprite.getLocalBounds().height;
+		float newWS = ;
+		float newHS =;
+
+		float finWS, finHS;
+		if (newWS <= newHS) {
+			newHS = newWS / AR;
+		}
+		else {
+			newWS = AR * newHS;
+		}*/
+
+		
+		sprite.setScale(w.getSize().x / sprite.getLocalBounds().width, w.getSize().y / sprite.getLocalBounds().height);
 		sprite.setOrigin(sprite.getLocalBounds().width * 0.5f, sprite.getLocalBounds().height * 0.5f);
 		sprite.setPosition(w.getSize().x * 0.5f, w.getSize().y * 0.5f);
 	}

@@ -96,6 +96,7 @@ int main() {
 		if (gameState == GameState::HOSTING) 
 		{
 			//start listening for connections and inform the server about it
+
 			if (!matchMaker.hosting) {
 				relay.tcpi.listen();
 				matchMaker.host();
@@ -162,6 +163,7 @@ int main() {
 				g2bfirst = false;
 				//relay.tcpi.block();
 				relay.sendStartingMessage();
+				std::cout << "Starting message sent!" << std::endl;
 				//relay.tcpi.unblock();
 				continue;
 			}
@@ -185,8 +187,10 @@ int main() {
 
 			if (!canStart9s) {
 				canStart9s = relay.receiveStartingMessage(deltaMs);
-				if (canStart9s)
+				if (canStart9s) {
 					g9sPtr->initialRobotSync(deltaMs);
+					std::cout << "Starting message sent!" << std::endl;
+				}
 				continue;
 			}
 			
@@ -210,6 +214,7 @@ int main() {
 
 				g2bfirst = true;
 				g9sfirst = true;
+				canStart9s = false;
 			}
 
 			if (vScreen.update(window))
@@ -232,6 +237,7 @@ int main() {
 
 				g2bfirst = true;
 				g9sfirst = true;
+				canStart9s = false;
 			}
 
 

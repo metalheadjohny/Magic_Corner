@@ -83,17 +83,17 @@ public:
 	Player(float maxHP, float maxSpeed){
 		
 		mousePos = sf::Vector2f(0, 0);
-		posMin = sf::Vector2f(200.f, 200.f);
+		posMin = sf::Vector2f(97.f, 97.f);
 
 		//load 2b
-		loadSSA(BASEPATH + "2B exivus sprites\\limit_break.png", sf::Vector2u(3, 17), 5.f, "lb");
-		loadSSA(BASEPATH + "2B exivus sprites\\move_left.png", sf::Vector2u(1, 1), 10.f, "walk_left");
-		loadSSA(BASEPATH + "2B exivus sprites\\move_right.png", sf::Vector2u(1, 1), 10.f, "walk_right");
-		loadSSA(BASEPATH + "2B exivus sprites\\magic_attack.png", sf::Vector2u(3, 2), 10.f, "ranged_attack");
+		loadSSA(BASEPATH + "2B exivus sprites\\sorted\\limit_break.png", sf::Vector2u(3, 17), 5.f, "lb");
+		loadSSA(BASEPATH + "2B exivus sprites\\sorted\\move_left.png", sf::Vector2u(1, 1), 10.f, "walk_left");
+		loadSSA(BASEPATH + "2B exivus sprites\\sorted\\move_right.png", sf::Vector2u(1, 1), 10.f, "walk_right");
+		loadSSA(BASEPATH + "2B exivus sprites\\sorted\\magic_attack.png", sf::Vector2u(3, 2), 10.f, "ranged_attack");
 		loadSSA(BASEPATH + "2B exivus sprites\\sorted\\m2b_pat_bot.png", sf::Vector2u(20, 1), 2.f, "idle");
 		
 		//load 9s
-		loadSSA9s(BASEPATH + "Sprites\\nines.png", sf::Vector2u(1, 2), 1.f, "9s_idle");
+		loadSSA9s(BASEPATH + "nines.png", sf::Vector2u(1, 2), 1.f, "9s_idle");
 		s9s.sprite.setOrigin(s9s.sprite.getLocalBounds().width * 0.5f, s9s.sprite.getLocalBounds().height * 0.5f * 0.5f);
 	}
 

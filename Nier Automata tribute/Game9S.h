@@ -100,6 +100,7 @@ public:
 			
 		//receive updates from player input
 		if (!iMan.processInput9S(w, e)) {
+			relay->disconnectFrom2B();
 			gs = GameState::DEFEAT;
 			return;
 		}
@@ -112,7 +113,7 @@ public:
 		{
 			if (msg.type == MessageType::T_2B) {
 				receiveUpdates(msg);
-				accountForDelay();	//will set mouse dir at first, but it will be overwritten by subsequen T_2B_MD_ONLY messsages as shooting continues
+				accountForDelay();
 			}
 				
 			if (msg.type == MessageType::T_2B_MD_ONLY) {
@@ -129,15 +130,19 @@ public:
 
 			if (msg.type == MessageType::T_2B_VICTORY) {
 				gs = GameState::VICTORY;
-				first = true;
 				return;
 			}
 
 			if (msg.type == MessageType::T_2B_DEFEAT) {
 				gs = GameState::DEFEAT;
-				first = true;
 				return;
 			}	
+
+			if (msg.type == MessageType::DISCONNECT) {
+				std::cout << "Connection lost. Host has willingly disconnected from this game. Better luck in your further games." << std::endl;
+				gs = GameState::DEFEAT;
+				return;
+			}
 
 			if (msg.type == MessageType::PULSE) {
 				sinceRemoteKeepalive = 0.f;
@@ -169,7 +174,7 @@ public:
 
 		sinceRemoteKeepalive += frameTime;
 		if (sinceRemoteKeepalive >= KEEPALIVE_INTERVAL * 3.f) {
-			std::cout << "You have disconnected from 2B! Sadly this means game over." << std::endl;
+			std::cout << "Your connection to 2B has deteriorated beyond repair! Sadly, this means game over." << std::endl;
 			gs = GameState::DEFEAT;
 		}
 	}
@@ -195,7 +200,7 @@ public:
 		//account for lag by pushing 2b forward compared to where she was when the message was sent, this will gradually happen
 		if ( (last2BMessage.state & (MOVE_DOWN | MOVE_LEFT | MOVE_RIGHT | MOVE_UP)) != 0 ) {
 
-			float factor = 0;//deltaSeconds * player.s2b.speed;
+			float factor = 0;	// deltaSeconds * player.s2b.speed
 		
 			if (last2BMessage.state == MOVE_DOWN)
 				deltaPos = sf::Vector2f(0.f, 1.f) * factor;

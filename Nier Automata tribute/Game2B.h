@@ -72,6 +72,7 @@ public:
 	{
 		//local updates
 		if (!iMan.processInput2B(w, e)) {
+			relay->disconnectFrom9S();
 			gs = GameState::DEFEAT;
 			return;
 		}
@@ -115,6 +116,13 @@ public:
 		if (relay->checkFor9SUpdates(msg))
 			receiveUpdates(msg);
 
+		//check if 9s intentionally disconnected
+		if (msg.type == MessageType::DISCONNECT) {
+			std::cout << "Connection lost. Client has willingly disconnected from this game. Better luck in your further games." << std::endl;
+			gs = GameState::DEFEAT;
+			return;
+		}
+
 		//this is a guess, keepalive method is reliable
 		if (relay->isDisconnected())
 			std::cout << "Interruption detected during synchronization with 9S. Connection might be compromised." << std::endl;
@@ -138,7 +146,7 @@ public:
 
 		sinceRemoteKeepalive += frameTime;
 		if (sinceRemoteKeepalive >= KEEPALIVE_INTERVAL * 3.f) {
-			std::cout << "You have disconnected from 9S! Sadly this means game over." << std::endl;
+			std::cout << "You connection to 9S has deteriorated beyond repair! Sadly, this means game over." << std::endl;
 			gs = GameState::DEFEAT;
 		}
 	}
@@ -153,7 +161,7 @@ public:
 			return;
 		}
 
-		if (lastTimestamp < msg.ms) {
+		if (msg.type == MessageType::T_9S && lastTimestamp < msg.ms) {
 			lastTimestamp = msg.ms;
 			player.s9s.rot = msg.angle;
 			player.s9s.dist = msg.distance;
