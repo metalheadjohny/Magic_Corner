@@ -71,7 +71,11 @@ void Relay::relayVictory()
 
 	p << MessageType::T_2B_VICTORY;
 
-	while (!tcpi.send2b(p));
+	//just in case...
+	for (int i = 0; i < 10; i++) {
+		tcpi.send2b(p);
+		std::cout << "VICTORY NOTIFICATION SENT!" << std::endl;
+	}
 }
 
 
@@ -82,7 +86,10 @@ void Relay::relayDefeat()
 
 	p << MessageType::T_2B_DEFEAT;
 
-	while (!tcpi.send2b(p));
+	for (int i = 0; i < 10; i++) {
+		tcpi.send2b(p);
+		std::cout << "DEFEAT NOTIFICATION SENT!" << std::endl;
+	}
 }
 
 

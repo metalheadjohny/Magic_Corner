@@ -85,7 +85,10 @@ public:
 
 		if (overlord.robotos.size() == 0) {
 			gs = GameState::VICTORY;
+			relay->tcpi.block();
 			relay->relayVictory();
+			relay->tcpi.unblock();
+			return;
 		}
 
 		if (player.s2b.hp <= 0) {

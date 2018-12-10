@@ -75,7 +75,7 @@ bool TCPInterface::send2b(sf::Packet& p)
 {
 	int tries = 1;
 	status = cooperator.send(p);
-	while (status != sf::Socket::Done || status == sf::Socket::Status::Partial) 
+	while (status != sf::Socket::Done) 
 	{
 		cooperator.send(p);
 
